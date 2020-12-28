@@ -32,6 +32,9 @@ extern "C" {
 #include "libavutil/imgutils.h"
 #include "libswscale/swscale.h"
 #include "libavutil/log.h"
+
+JavaVM *g_VM;
+jobject g_obj;
 JNIEXPORT jint JNICALL
 Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thiz, jstring inputurl,
                                                         jstring outputurl) {
@@ -141,6 +144,8 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
                 fwrite(pFrameYUV->data[1],1,y_size/4,fp_yuv);  //U
                 fwrite(pFrameYUV->data[2],1,y_size/4,fp_yuv);  //V
                 //Output info
+                //设置回调 每解析一帧就返回一帧
+
                 char pictype_str[10]={0};
                 switch(pFrame->pict_type){
                     case AV_PICTURE_TYPE_I:sprintf(pictype_str,"I");break;
@@ -180,5 +185,17 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
         frame_cnt++;
     }
     return 0;
+}
+JNIEXPORT void JNICALL
+Java_com_example_ffmpegtest_SimpleDecodeActivity_setDecodeListener(JNIEnv *env, jobject thiz,
+                                                                   jobject decode_listener) {
+    // TODO: implement setDecodeListener()
+    //JavaVM是虚拟机在JNI中的表示，等下再其他线程回调java层需要用到
+    env->GetJavaVM(&g_VM);
+    // 生成一个全局引用保留下来，以便回调
+    g_obj = env->NewGlobalRef(thiz);
+
+    pthread_t ()
+    return ;
 }
 }

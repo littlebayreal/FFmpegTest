@@ -5,6 +5,7 @@ extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libavfilter/avfilter.h"
+
 JNIEXPORT jstring
 JNICALL
 Java_com_example_ffmpegtest_MainActivity_stringFromJNI(
@@ -123,5 +124,6 @@ Java_com_example_ffmpegtest_MainActivity_configurationinfo(JNIEnv *env, jobject 
     sprintf(info, "%s\n", avcodec_configuration());
     //LOGE("%s", info);
     return env->NewStringUTF(info);
+
 }
 };

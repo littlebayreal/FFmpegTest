@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.nio.ByteBuffer;
+
 import static android.os.Environment.getExternalStorageDirectory;
 
 public class SimpleDecodeActivity extends AppCompatActivity {
@@ -29,13 +31,13 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         vv.setVideoPath(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4");
         vv.start();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                decode( Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",
-                        Environment.getExternalStorageDirectory() + "/DCIM/output.yuv");
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                decode( Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",
+//                        Environment.getExternalStorageDirectory() + "/DCIM/output.yuv");
+//            }
+//        }).start();
 
     }
     static {
@@ -48,8 +50,15 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         System.loadLibrary("swscale");
         System.loadLibrary("native-lib");
     }
+    public native void setDecodeListener(DecodeListener decodeListener);
     public native int decode(String inputurl, String outputurl);
-
+    public interface DecodeListener {
+        /**
+         * 这里为了演示自定义 Callback 的用法，使用了自定义 Java-Callback 类作为回调参数，
+         * 可直接使用基本类型或者其他引用类型做回调参数，根据自己的业务需求决定。
+         */
+        void onDecode(ByteBuffer yuvFrame,String type);
+    }
     private void requestPermission() {
         //1. 检查是否已经有该权限
         if (Build.VERSION.SDK_INT >= 23 && (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
