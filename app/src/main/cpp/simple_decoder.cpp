@@ -33,8 +33,8 @@ extern "C" {
 #include "libswscale/swscale.h"
 #include "libavutil/log.h"
 
-JavaVM *g_VM;
-jobject g_obj;
+//JavaVM *g_VM;
+//jobject g_obj;
 JNIEXPORT jint JNICALL
 Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thiz, jstring inputurl,
                                                         jstring outputurl) {
@@ -103,14 +103,18 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
     pFrame=av_frame_alloc();
     pFrameYUV=av_frame_alloc();
     out_buffer=(unsigned char *)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_YUV420P,  pCodecCtx->width, pCodecCtx->height,1));
-
+//    out_buffer=(unsigned char *)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_RGB24,  pCodecCtx->width, pCodecCtx->height,1));
     av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize,out_buffer,
                          AV_PIX_FMT_YUV420P,pCodecCtx->width, pCodecCtx->height,1);
+//    av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize,out_buffer,
+//                         AV_PIX_FMT_RGB24,pCodecCtx->width, pCodecCtx->height,1);
     //初始化packet
     packet=(AVPacket *)av_malloc(sizeof(AVPacket));
 
     img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
                                      pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+//    img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
+//                                     pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
 
     sprintf(info,   "[Input     ]%s\n", input_str);
     sprintf(info, "%s[Output    ]%s\n",info,output_str);
@@ -138,8 +142,8 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
             if(got_picture){
                 sws_scale(img_convert_ctx, (const uint8_t **)pFrame->data, pFrame->linesize, 0, pCodecCtx->height,
                           pFrameYUV->data, pFrameYUV->linesize);
-
                 y_size=pCodecCtx->width*pCodecCtx->height;
+//                fwrite(pFrameYUV->data[0],(pCodecCtx->width)*(pCodecCtx->height)*3,1,fp_yuv);
                 fwrite(pFrameYUV->data[0],1,y_size,fp_yuv);    //Y
                 fwrite(pFrameYUV->data[1],1,y_size/4,fp_yuv);  //U
                 fwrite(pFrameYUV->data[2],1,y_size/4,fp_yuv);  //V
@@ -170,6 +174,8 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
         sws_scale(img_convert_ctx, (const uint8_t **)pFrame->data, pFrame->linesize, 0, pCodecCtx->height,
                   pFrameYUV->data, pFrameYUV->linesize);
         int y_size=pCodecCtx->width*pCodecCtx->height;
+        //RGB
+//        fwrite(pFrameYUV->data[0],(pCodecCtx->width)*(pCodecCtx->height)*3,1,fp_yuv);
         fwrite(pFrameYUV->data[0],1,y_size,fp_yuv);    //Y
         fwrite(pFrameYUV->data[1],1,y_size/4,fp_yuv);  //U
         fwrite(pFrameYUV->data[2],1,y_size/4,fp_yuv);  //V
@@ -186,16 +192,13 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thi
     }
     return 0;
 }
-JNIEXPORT void JNICALL
-Java_com_example_ffmpegtest_SimpleDecodeActivity_setDecodeListener(JNIEnv *env, jobject thiz,
-                                                                   jobject decode_listener) {
-    // TODO: implement setDecodeListener()
-    //JavaVM是虚拟机在JNI中的表示，等下再其他线程回调java层需要用到
-    env->GetJavaVM(&g_VM);
-    // 生成一个全局引用保留下来，以便回调
-    g_obj = env->NewGlobalRef(thiz);
-
-    pthread_t ()
-    return ;
-}
+//JNIEXPORT void JNICALL
+//Java_com_example_ffmpegtest_SimpleDecodeActivity_setDecodeListener(JNIEnv *env, jobject thiz,jobject decode_listener) {
+//    // TODO: implement setDecodeListener()
+//    //JavaVM是虚拟机在JNI中的表示，等下再其他线程回调java层需要用到
+//    env->GetJavaVM(&g_VM);
+//    // 生成一个全局引用保留下来，以便回调
+//    g_obj = env->NewGlobalRef(thiz);
+//    return ;
+//}
 }

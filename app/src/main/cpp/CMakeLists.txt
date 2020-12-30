@@ -27,6 +27,7 @@ add_library( # Sets the name of the library.
 
 
 set(LIB_PATH ${PROJECT_SOURCE_DIR}/../../../libs)
+MESSAGE("路径==" ${LIB_PATH})
 include_directories(${LIB_PATH}/include)
 set(DIR ${LIB_PATH}/${ANDROID_ABI})
 

@@ -54,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this,SimpleDecodeActivity.class);
                 startActivity(intent);
                 break;
+            case "ffmpeg+surfacview播放视频":
+                intent = new Intent(MainActivity.this,SimplePlayerActivity.class);
+                startActivity(intent);
+                break;
         }
     }
 //    public native String typeOfSystem();

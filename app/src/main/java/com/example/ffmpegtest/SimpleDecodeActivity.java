@@ -28,16 +28,16 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         requestPermission();
         vv = findViewById(R.id.vv);
 
-        vv.setVideoPath(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4");
-        vv.start();
+//        vv.setVideoPath(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4");
+//        vv.start();
 
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                decode( Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",
-//                        Environment.getExternalStorageDirectory() + "/DCIM/output.yuv");
-//            }
-//        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                decode( Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",
+                        Environment.getExternalStorageDirectory() + "/DCIM/output.rgb");
+            }
+        }).start();
 
     }
     static {
@@ -50,7 +50,7 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         System.loadLibrary("swscale");
         System.loadLibrary("native-lib");
     }
-    public native void setDecodeListener(DecodeListener decodeListener);
+//    public native void setDecodeListener(DecodeListener decodeListener);
     public native int decode(String inputurl, String outputurl);
     public interface DecodeListener {
         /**

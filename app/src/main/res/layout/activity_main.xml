@@ -56,8 +56,12 @@
            android:layout_margin="2dp"
            android:text="filter"
            android:onClick="clickBtn"/>
-
    </LinearLayout>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ffmpeg+surfacview播放视频"
+        android:onClick="clickBtn"/>
     <TextView
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"
