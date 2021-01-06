@@ -1,6 +1,8 @@
 package com.example.ffmpegtest.widget;
 
 import android.content.Context;
+import android.os.Environment;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -10,23 +12,18 @@ public class VideoSurface extends SurfaceView implements SurfaceHolder.Callback 
     private static final String TAG = "VideoSurface";
 
     static {
-        System.loadLibrary("avcodec");
-        System.loadLibrary("avdevice");
-        System.loadLibrary("avfilter");
-        System.loadLibrary("avformat");
-        System.loadLibrary("avutil");
-        System.loadLibrary("swresample");
-        System.loadLibrary("swscale");
         System.loadLibrary("native-lib");
     }
 
     public VideoSurface(Context context) {
         super(context);
         Log.v(TAG, "VideoSurface");
-
         getHolder().addCallback(this);
     }
-
+    public VideoSurface(Context context, AttributeSet attributeSet){
+        super(context,attributeSet);
+        getHolder().addCallback(this);
+    }
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
@@ -37,31 +34,17 @@ public class VideoSurface extends SurfaceView implements SurfaceHolder.Callback 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.v(TAG, "surfaceCreated");
-        setSurface(holder.getSurface());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ffPlay(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",holder.getSurface());
+            }
+        }).start();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.v(TAG, "surfaceDestroyed");
     }
-
-    public int pausePlayer() {
-        return nativePausePlayer();
-    }
-
-    public int resumePlayer() {
-        return nativeResumePlayer();
-    }
-
-    public int stopPlayer() {
-        return nativeStopPlayer();
-    }
-
-    public native int setSurface(Surface view);
-
-    public native int nativePausePlayer();
-
-    public native int nativeResumePlayer();
-
-    public native int nativeStopPlayer();
+    public native int ffPlay(String videoPath, Surface surfaceView);
 }
