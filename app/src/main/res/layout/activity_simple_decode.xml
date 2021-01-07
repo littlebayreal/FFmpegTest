@@ -2,8 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-  <VideoView
-      android:id="@+id/vv"
-      android:layout_width="match_parent"
-      android:layout_height="200dp"/>
+
+    <com.example.ffmpegtest.widget.FFmpegVideoView
+        android:id="@+id/vv"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
 </LinearLayout>
