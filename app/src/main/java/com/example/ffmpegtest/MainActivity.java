@@ -4,23 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import java.io.BufferedInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
     private TextView tv;
-
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("avcodec");
@@ -45,9 +40,8 @@ public class MainActivity extends AppCompatActivity {
 //        TextView tv2 = findViewById(R.id.sample_text2);
 //        tv2.setText(typeOfSystem());
     }
-
-    public void clickBtn(View v) {
-        switch (((TextView) v).getText().toString()) {
+    public void clickBtn(View v){
+        switch (((TextView)v).getText().toString()){
             case "configuration":
                 tv.setText(configurationinfo());
                 break;
@@ -64,26 +58,21 @@ public class MainActivity extends AppCompatActivity {
                 tv.setText(avfilterinfo());
                 break;
             case "SimpleDecodeActivity":
-                Intent intent = new Intent(MainActivity.this, SimpleDecodeActivity.class);
+                Intent intent = new Intent(MainActivity.this,SimpleDecodeActivity.class);
                 startActivity(intent);
                 break;
-            case "getDecodeFile":
-                byte[] b = readFile(Environment.getExternalStorageDirectory() + "/Download/output.yuv");
-                Log.i("AAA",HexStringUtil.toHexString(b));
+            case "ffmpeg+surfacview播放视频":
+                intent = new Intent(MainActivity.this,SimplePlayerActivity.class);
+                startActivity(intent);
                 break;
         }
     }
-
-    //    public native String typeOfSystem();
+//    public native String typeOfSystem();
     //JNI
     public native String urlprotocolinfo();
-
     public native String avformatinfo();
-
     public native String avcodecinfo();
-
     public native String avfilterinfo();
-
     public native String configurationinfo();
 
     private byte[] readFile(String path) {

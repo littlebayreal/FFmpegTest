@@ -3,8 +3,6 @@
 //
 #include <stdio.h>
 #include <time.h>
-#include <iostream>
-using namespace std;
 
 #ifdef ANDROID  //如果是android编译器 使用android log 输出
 
@@ -20,19 +18,12 @@ using namespace std;
 
 //Output FFmpeg's av_log()
 void custom_log(void *ptr, int level, const char *fmt, va_list vl) {
-    FILE *fp = fopen("/storage/emulated/0/DCIM/av_log.txt", "a+");
+    FILE *fp = fopen("/storage/emulated/0/av_log.txt", "a+");
     if (fp) {
         vfprintf(fp, fmt, vl);
         fflush(fp);
         fclose(fp);
     }
-}
-
-jbyteArray as_byte_array(JNIEnv *env, unsigned char* buf, int size) {
-    jbyteArray array = env->NewByteArray(size);
-    //HERE I GET THE ERROR, I HAVE BEEN TRYING WITH len/2 and WORKS , PROBABLY SOME BYTS ARE GETTING LOST.
-    env->SetByteArrayRegion(array, 0, size, (jbyte*)(buf));
-    return array;
 }
 
 extern "C" {
@@ -42,8 +33,8 @@ extern "C" {
 #include "libswscale/swscale.h"
 #include "libavutil/log.h"
 
-JavaVM *g_VM;
-jobject g_obj;
+//JavaVM *g_VM;
+//jobject g_obj;
 JNIEXPORT jint JNICALL
 Java_com_example_ffmpegtest_SimpleDecodeActivity_decode(JNIEnv *env, jobject thiz, jstring inputurl,
                                                         jstring outputurl) {
@@ -301,7 +292,7 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
     av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize, out_buffer,
                          AV_PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height, 1);
     //初始化packet
-    packet = (AVPacket *) av_malloc(sizeof(AVPacket));
+    packet=(AVPacket *)av_malloc(sizeof(AVPacket));
 
     img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
                                      pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_RGB24,
@@ -326,7 +317,7 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
         if (packet->stream_index == videoindex) {
             //解码
             ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
-            if (ret < 0) {
+            if(ret < 0){
                 LOGE("Decode Error.\n");
                 return -1;
             }
@@ -344,34 +335,13 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
 //                fwrite(pFrameYUV->data[2],1,y_size/4,fp_yuv);  //V
                 //Output info
                 //设置回调 每解析一帧就返回一帧
-//                char info_frame[100] = {0};
-//                LOGI("simple decoder 本帧有多大:%d", y_size * 3);
-//                for (int i = 0; i < 100; ++i) {
-//                    sprintf(info_frame, "%s[%10s]\n", info_frame, (int *)pFrameYUV->data[0]);
-//                }
-//                LOGI("simple decoder 本帧解析结果:%c", info_frame);
-//                jbyteArray jbarray = env->NewByteArray(y_size*3);//建立jbarray数组
-//                env->SetByteArrayRegion(jbarray, 0, y_size*3, (jbyte*) pFrameYUV->data[0]);
-                char pictype_str[10] = {0};
-                switch (pFrame->pict_type) {
-                    case AV_PICTURE_TYPE_I:
-                        sprintf(pictype_str, "I");
-                        break;
-                    case AV_PICTURE_TYPE_P:
-                        sprintf(pictype_str, "P");
-                        break;
-                    case AV_PICTURE_TYPE_B:
-                        sprintf(pictype_str, "B");
-                        break;
-                    default:
-                        sprintf(pictype_str, "Other");
-                        break;
-                }
-                if(frame_cnt == 600) {
-                    unsigned char *c = pFrameYUV->data[0];
-                    jbyteArray j = as_byte_array(env, c, y_size * 3);
-                    env->CallVoidMethod(thiz, callbackMethodID, j,
-                                        env->NewStringUTF(pictype_str));
+
+                char pictype_str[10]={0};
+                switch(pFrame->pict_type){
+                    case AV_PICTURE_TYPE_I:sprintf(pictype_str,"I");break;
+                    case AV_PICTURE_TYPE_P:sprintf(pictype_str,"P");break;
+                    case AV_PICTURE_TYPE_B:sprintf(pictype_str,"B");break;
+                    default:sprintf(pictype_str,"Other");break;
                 }
                 LOGI("Frame Index: %5d. Type:%s", frame_cnt, pictype_str);
                 frame_cnt++;
@@ -426,6 +396,10 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
 //JNIEXPORT void JNICALL
 //Java_com_example_ffmpegtest_SimpleDecodeActivity_setDecodeListener(JNIEnv *env, jobject thiz,jobject decode_listener) {
 //    // TODO: implement setDecodeListener()
-//
-
+//    //JavaVM是虚拟机在JNI中的表示，等下再其他线程回调java层需要用到
+//    env->GetJavaVM(&g_VM);
+//    // 生成一个全局引用保留下来，以便回调
+//    g_obj = env->NewGlobalRef(thiz);
+//    return ;
+//}
 }

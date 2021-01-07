@@ -19,8 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.ffmpegtest.widget.FFmpegVideoView;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -50,8 +48,6 @@ public class SimpleDecodeActivity extends AppCompatActivity {
             }
         };
         vv = findViewById(R.id.vv);
-//        vv.setVideoPath(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4");
-//        vv.start();
 
         new Thread(new Runnable() {
             @Override

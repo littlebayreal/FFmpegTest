@@ -19,9 +19,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SimpleDecodeActivity">
-
-        </activity>
+        <activity android:name=".SimpleDecodeActivity"/>
+        <activity android:name=".SimplePlayerActivity"/>
     </application>
 
 </manifest>

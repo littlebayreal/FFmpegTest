@@ -27,6 +27,7 @@ add_library( # Sets the name of the library.
 
 
 set(LIB_PATH ${PROJECT_SOURCE_DIR}/../../../libs)
+MESSAGE("路径==" ${LIB_PATH})
 include_directories(${LIB_PATH}/include)
 set(DIR ${LIB_PATH}/${ANDROID_ABI})
 
@@ -139,4 +140,5 @@ target_link_libraries( # Specifies the target library.
         swscale
         # Links the target library to the log library
         # included in the NDK.
+        android
         ${log-lib})

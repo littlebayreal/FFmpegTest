@@ -6,85 +6,72 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:layout_margin="2dp"
-            android:text="configuration"
-            android:onClick="clickBtn" />
-
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="10sp"
+        android:layout_margin="2dp"
+        android:text="configuration"
+        android:onClick="clickBtn"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="10sp"
             android:layout_margin="2dp"
             android:text="SimpleDecodeActivity"
-            android:onClick="clickBtn" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:layout_margin="2dp"
-            android:text="getDecodeFile"
-            android:onClick="clickBtn" />
+            android:onClick="clickBtn"/>
 
     </LinearLayout>
-
-    <LinearLayout
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content">
+       <Button
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_margin="2dp"
+           android:textSize="10sp"
+           android:text="protocol"
+           android:onClick="clickBtn"/>
+       <Button
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:textSize="10sp"
+           android:layout_margin="2dp"
+           android:text="format"
+           android:onClick="clickBtn"/>
+       <Button
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:textSize="10sp"
+           android:layout_margin="2dp"
+           android:text="codec"
+           android:onClick="clickBtn"/>
+       <Button
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:textSize="10sp"
+           android:layout_margin="2dp"
+           android:text="filter"
+           android:onClick="clickBtn"/>
+   </LinearLayout>
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="2dp"
-            android:textSize="10sp"
-            android:text="protocol"
-            android:onClick="clickBtn" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:layout_margin="2dp"
-            android:text="format"
-            android:onClick="clickBtn" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:layout_margin="2dp"
-            android:text="codec"
-            android:onClick="clickBtn" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:layout_margin="2dp"
-            android:text="filter"
-            android:onClick="clickBtn" />
-
-    </LinearLayout>
-
+        android:layout_height="wrap_content"
+        android:text="ffmpeg+surfacview播放视频"
+        android:onClick="clickBtn"/>
     <TextView
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />
 
-    <!--    <TextView-->
-    <!--        android:id="@+id/sample_text2"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text="Hello World!" />-->
+<!--    <TextView-->
+<!--        android:id="@+id/sample_text2"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Hello World!" />-->
 
 </LinearLayout>
