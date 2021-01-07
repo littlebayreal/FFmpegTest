@@ -57,8 +57,9 @@ public class SimpleDecodeActivity extends AppCompatActivity {
 //                int ret = decode( Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",Environment.getExternalStorageDirectory()
 //                        + "/Download/output.yuv");
 //                Log.i(TAG,"simple decode ret:"+ ret);
-                returnDecode(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",Environment.getExternalStorageDirectory()
+                int ret = returnDecode(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4",Environment.getExternalStorageDirectory()
                         + "/DCIM/sintel_out.rgb");
+                Log.i(TAG,"simple decode ret:"+ ret);
             }
         }).start();
 
@@ -77,7 +78,9 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         void onDecode(ByteBuffer yuvFrame,String type);
     }
     public void onDecode(byte[] yuvFrame,String type){
-        Log.i(TAG,"rgba:"+ Arrays.toString(yuvFrame));
+        byte[] temp = new byte[128];
+        System.arraycopy(yuvFrame,200000,temp,0,128);
+        Log.i(TAG,"rgba:"+ Arrays.toString(temp));
         Log.i(TAG,"type:"+ type);
 
         Message message = new Message();
