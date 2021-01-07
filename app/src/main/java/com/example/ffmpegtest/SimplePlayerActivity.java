@@ -22,7 +22,12 @@ public class SimplePlayerActivity extends AppCompatActivity {
         sv = findViewById(R.id.surface_view);
         sv.getHolder().setFormat(PixelFormat.RGBA_8888);
 
-
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ffplayAudio(Environment.getExternalStorageDirectory() + "/DCIM/sintel.mp4");
+            }
+        }).start();
     }
     public native int ffplayAudio(String path);
 }

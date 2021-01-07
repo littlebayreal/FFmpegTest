@@ -19,6 +19,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.ffmpegtest.widget.FFmpegVideoView;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -62,13 +64,6 @@ public class SimpleDecodeActivity extends AppCompatActivity {
 
     }
     static {
-        System.loadLibrary("avcodec");
-        System.loadLibrary("avdevice");
-        System.loadLibrary("avfilter");
-        System.loadLibrary("avformat");
-        System.loadLibrary("avutil");
-        System.loadLibrary("swresample");
-        System.loadLibrary("swscale");
         System.loadLibrary("native-lib");
     }
 //    public native void setDecodeListener(DecodeListener decodeListener);
@@ -82,7 +77,7 @@ public class SimpleDecodeActivity extends AppCompatActivity {
         void onDecode(ByteBuffer yuvFrame,String type);
     }
     public void onDecode(byte[] yuvFrame,String type){
-//        Log.i(TAG,"rgba:"+ Arrays.toString(yuvFrame));
+        Log.i(TAG,"rgba:"+ Arrays.toString(yuvFrame));
         Log.i(TAG,"type:"+ type);
 
         Message message = new Message();

@@ -329,12 +329,11 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
 
                 LOGI("simple decoder 图像大小:%d %d\n", pCodecCtx->width, pCodecCtx->height);
                 y_size = pCodecCtx->width * pCodecCtx->height;
-                fwrite(pFrameYUV->data[0], y_size * 3, 1, fp_yuv);
+//                fwrite(pFrameYUV->data[0], y_size * 3, 1, fp_yuv);
 //                fwrite(pFrameYUV->data[0],1,y_size,fp_yuv);    //Y
 //                fwrite(pFrameYUV->data[1],1,y_size/4,fp_yuv);  //U
 //                fwrite(pFrameYUV->data[2],1,y_size/4,fp_yuv);  //V
                 //Output info
-                //设置回调 每解析一帧就返回一帧
 
                 char pictype_str[10]={0};
                 switch(pFrame->pict_type){
@@ -345,6 +344,14 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
                 }
                 LOGI("Frame Index: %5d. Type:%s", frame_cnt, pictype_str);
                 frame_cnt++;
+                //设置回调 每解析一帧就返回一帧
+                if(frame_cnt == 600) {
+                    jbyteArray jbarray = env->NewByteArray(y_size*3);//建立jbarray数组
+                    env->SetByteArrayRegion(jbarray, 0, y_size*3, (jbyte *) pFrameYUV->data[0]);
+
+                    env->CallVoidMethod(thiz, callbackMethodID, jbarray,
+                                        env->NewStringUTF(pictype_str));
+                }
             } else
                 LOGE("simple decoder 解析失败:%d", got_picture);
         }
