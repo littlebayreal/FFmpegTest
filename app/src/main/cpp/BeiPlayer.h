@@ -1,0 +1,8 @@
+//
+// Created by GNNBEI on 2021/1/8.
+//
+
+#ifndef FFMPEGTEST_BEIPLAYER_H
+#define FFMPEGTEST_BEIPLAYER_H
+
+#endif //FFMPEGTEST_BEIPLAYER_H

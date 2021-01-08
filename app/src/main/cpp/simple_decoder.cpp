@@ -345,10 +345,11 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
                 LOGI("Frame Index: %5d. Type:%s", frame_cnt, pictype_str);
                 frame_cnt++;
                 //设置回调 每解析一帧就返回一帧
+                //将原始帧数据以字符形式写入文件
                 if(frame_cnt == 1) {
-                    for (int i = 0; i < y_size; ++i) {
+                    for (int i = 0; i < y_size*3; ++i) {
 //                        LOGI("RGB: %u",(unsigned char)pFrameYUV->data[0][i]);
-                        fprintf(fp_yuv, "%x ",pFrameYUV->data[0][i]);
+                        fprintf(fp_yuv, "%02x ",*(pFrameYUV->data[0] + i));
                     }
                     jbyteArray jbarray = env->NewByteArray(y_size*3);//建立jbarray数组
                     env->SetByteArrayRegion(jbarray, 0, y_size*3, (jbyte *) pFrameYUV->data[0]);
