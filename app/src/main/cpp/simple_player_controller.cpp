@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "SLES/OpenSLES.h"
 #include "SLES/OpenSLES_Android.h"
+#include "macro.h"
 /**
  * 播放viedeo
  * @param env
@@ -19,8 +20,8 @@
 #ifdef ANDROID  //如果是android编译器 使用android log 输出
 
 
-#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "(>_<)", format, ##__VA_ARGS__)
-#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "(^_^)", format, ##__VA_ARGS__)
+//#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "(>_<)", format, ##__VA_ARGS__)
+//#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "(^_^)", format, ##__VA_ARGS__)
 
 void createPlayer(const char *path);
 

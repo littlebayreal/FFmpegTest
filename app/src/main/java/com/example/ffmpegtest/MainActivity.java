@@ -65,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
                 intent = new Intent(MainActivity.this,SimplePlayerActivity.class);
                 startActivity(intent);
                 break;
+            case "BeiPlayer(基于ffmpeg封装)播放视频":
+                intent = new Intent(MainActivity.this,BeiPlayerActivity.class);
+                startActivity(intent);
+                break;
         }
     }
 //    public native String typeOfSystem();

@@ -15,7 +15,8 @@ project("ffmpegtest")
 # Gradle automatically packages shared libraries with your APK.
 MESSAGE("默认路径:"+ ${PROJECT_SOURCE_DIR})
 set(cpp_dir ${PROJECT_SOURCE_DIR}/../../../src/main/cpp)
-file(GLOB cpp_src ${cpp_dir}/*.cpp)
+file(GLOB cpp_src ${cpp_dir}/*.cpp ${cpp_dir}/*.h)
+MESSAGE("cpp_dir:"+ ${cpp_src})
 add_library( # Sets the name of the library.
         native-lib
 

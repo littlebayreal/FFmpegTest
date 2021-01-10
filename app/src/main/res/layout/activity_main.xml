@@ -62,6 +62,11 @@
         android:layout_height="wrap_content"
         android:text="ffmpeg+surfacview播放视频"
         android:onClick="clickBtn"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="BeiPlayer(基于ffmpeg封装)播放视频"
+        android:onClick="clickBtn"/>
     <TextView
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"

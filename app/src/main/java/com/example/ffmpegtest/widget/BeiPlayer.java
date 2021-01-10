@@ -3,6 +3,7 @@ package com.example.ffmpegtest.widget;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -52,7 +53,8 @@ public class BeiPlayer implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        beiPlayerSetSurface(mSurfaceHolder.getSurface());
+        int ret = beiPlayerSetSurface(mSurfaceHolder.getSurface());
+        Log.i(TAG,"创建显示屏幕:"+ ret);
     }
 
     @Override
@@ -69,7 +71,6 @@ public class BeiPlayer implements SurfaceHolder.Callback {
      * c层准备完毕.
      */
     void onPrepare(){
-
         if(null != onPrepareListener) onPrepareListener.onPrepare();
     }
 
