@@ -11,7 +11,7 @@
 #include "JavaCallHelper.h"
 //#include "AudioChannel.h"
 #include "VideoChannel.h"
-
+#include "macro.h"
 extern "C"{
 //封装格式，总上下文
 #include "libavformat/avformat.h"
@@ -19,15 +19,14 @@ extern "C"{
 #include "libavcodec/avcodec.h"
 //#缩放
 #include "libswscale/swscale.h"
-// 重采样
+//重采样
 #include "libswresample/swresample.h"
 //时间工具
 #include "libavutil/time.h"
 }
 
-
-#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "(>_<)", format, ##__VA_ARGS__)
-#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "(^_^)", format, ##__VA_ARGS__)
+//#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "BeiPlayer", format, ##__VA_ARGS__)
+//#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "BeiPlayer", format, ##__VA_ARGS__)
 
 //播放控制.
 class BeiPlayer {

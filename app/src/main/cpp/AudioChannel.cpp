@@ -8,6 +8,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 AudioChannel::AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *avCodecContext,AVRational time_base, AVFormatContext* formatContext)
         : BaseChannel(id, javaCallHelper, avCodecContext,time_base)
 {
+    LOGI("AudioChannel构造函数");
     this->javaCallHelper = javaCallHelper;
     this->avCodecContext = avCodecContext;
     this->avFormatContext = formatContext;
@@ -18,12 +19,14 @@ AudioChannel::AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContex
     //CD音频标准
     //44100 双声道 2字节
     buffer = (uint8_t *)(malloc(out_sample_rate * out_samplesize * out_channels));
+
+//    LOGI("队列为空指针:%d",pkt_queue.size());
     //设置清空回调函数释放对象的回调.
     pkt_queue.setReleaseCallback(releaseAvPacket);
     frame_queue.setReleaseCallback(releaseAvFrame);
     //设置同步处理函数的回调
-    pkt_queue.setSyncHandle(syncHandle);
-    frame_queue.setSyncHandle(syncFrameHandle);
+//    pkt_queue.setSyncHandle(syncHandle);
+//    frame_queue.setSyncHandle(syncFrameHandle);
 }
 void AudioChannel::play() {
 //    初始化转换器上下文,设置重采样 .
@@ -35,7 +38,7 @@ void AudioChannel::play() {
     swr_init(swrContext);
     pkt_queue.setWork(1);
     frame_queue.setWork(1);
-    isPlaying = true ;
+    isPlaying = true;
     //创建初始化OPENSL_ES的线程
     LOGI("音频创建解码和播放线程");
     //创建音频解码线程

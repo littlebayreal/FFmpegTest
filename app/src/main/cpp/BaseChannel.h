@@ -7,7 +7,7 @@
 #include <android/log.h>
 #include "safe_queue.h"
 #include "JavaCallHelper.h"
-
+#include "macro.h"
 extern "C"{
 #include <libavutil/rational.h>
 //封装格式，总上下文
@@ -24,8 +24,8 @@ extern "C"{
 #include "libavutil/imgutils.h"
 }
 
-#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "BeiPlayer", format, ##__VA_ARGS__)
-#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "BeiPlayer", format, ##__VA_ARGS__)
+//#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "BeiPlayer", format, ##__VA_ARGS__)
+//#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "BeiPlayer", format, ##__VA_ARGS__)
 
 class BaseChannel {
 public:
