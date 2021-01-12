@@ -50,9 +50,9 @@ void AudioChannel::stop() {
     //1. set the playing flag false.
     isPlaying = false;
     //2. release thread deque packet thread . pthread_join 子线程执行完毕之后 主线程才会继续向下执行
-    pthread_join(pid_audio_decode,NULL);
+//    pthread_join(pid_audio_decode,NULL);
     //3. release the synchronize thread for frame transform and render .
-    pthread_join(pid_audio_play,NULL);
+//    pthread_join(pid_audio_play,NULL);
     //4. clear the queue .
     pkt_queue.clear();
     frame_queue.clear();
@@ -301,7 +301,7 @@ void AudioChannel::seek(long ms){
         int64_t timestamp;
         timestamp += ms;
         int ret = avformat_seek_file(avFormatContext,channelId,INT64_MIN, timestamp , INT64_MAX, AVSEEK_FLAG_BACKWARD);
-
+        LOGE("seek frame %d",ret);
         if (ret < 0) {
             LOGE("could not seek to position %0.3f\n",(double)timestamp / AV_TIME_BASE);
         }

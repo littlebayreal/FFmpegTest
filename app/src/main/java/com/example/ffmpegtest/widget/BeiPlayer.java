@@ -66,6 +66,15 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         beiPlayerPause();
     }
+    public void setOnPrepareListener(OnPrepareListener l){
+        this.onPrepareListener = l;
+    }
+    public void setOnProgressListener(OnProgressListener l){
+        this.onProgressListener = l;
+    }
+    public void setOnErrorListener(OnErrorListener l){
+        this.onErrorListener = l;
+    }
     //-------------------------------------提供给c的通知回调方法---------------------------------------//
     /**
      * c层准备完毕.

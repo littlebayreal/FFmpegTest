@@ -42,6 +42,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved){
 void renderFrame(uint8_t* data, int linesize , int w, int h){
     //开始渲染 .
     LOGE("renderFrame start()!~...");
+    if(window == 0)return;
     //对本地窗口设置缓冲区大小RGBA .
     ANativeWindow_setBuffersGeometry(window , w , h,
                                      WINDOW_FORMAT_RGBA_8888);
@@ -122,6 +123,10 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerStop(JNIEnv *env, jobject thiz) {
     // TODO: implement native_close()
+    if(window){
+        ANativeWindow_release(window);
+        window = 0;
+    }
     //1. 停止video解码
     if(mBeiPlayer){
         mBeiPlayer->stop();

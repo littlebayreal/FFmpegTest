@@ -153,10 +153,11 @@ void BeiPlayer::prepareFFmpeg() {
         javaCallHelper->onPrepare(THREAD_CHILD);
     }
 }
-
-void *startThread(void *args) {
+void* startThread(void *args) {
+    LOGI("args address");
     BeiPlayer *beiFFmpeg = static_cast<BeiPlayer *>(args);
     beiFFmpeg->play();//开始从mp4中读取packet
+    return 0;
 }
 
 /**
@@ -206,7 +207,6 @@ void BeiPlayer::play() {
         AVPacket *packet = av_packet_alloc();
         //从媒体中读取音视频的packet包.
         ret = av_read_frame(formatContext, packet);
-        LOGI("视频开始播放");
         if (ret == 0) {
             //将数据包加入队列.
             if (audioChannel && packet->stream_index == audioChannel->channelId) {
@@ -245,23 +245,27 @@ void BeiPlayer::setRenderCallBack(RenderFrame renderFrame) {
 
 void BeiPlayer::pause() {
     //先关闭播放状态.
-//    isPlaying = false;
+    isPlaying = false;
 }
 
 void BeiPlayer::stop() {
+    LOGI("stop beiplayer");
     //先关闭播放状态.
     isPlaying = false;
     //1. 停止prepare线程.
-    pthread_join(pid_prepare, NULL);
-    //2. 停止play线程
-    pthread_join(pid_play, NULL);
 
-    /*if(audioChannel){
-        audioChannel->stop();
-    }
-    if(videoChannel){
-        videoChannel->stop();
-    }*/
+//    pthread_join(pid_prepare, NULL);
+    LOGI("pid_prepare线程停止");
+
+//    if(audioChannel){
+//        audioChannel->stop();
+//    }
+//    if(videoChannel){
+//        videoChannel->stop();
+//    }
+    //2. 停止play线程
+//    pthread_join(pid_play, NULL);
+    LOGI("pid_play线程停止");
 }
 
 //seek the frame to dest .

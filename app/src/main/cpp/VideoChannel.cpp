@@ -63,9 +63,10 @@ void * decode(void* args){
  * @param args
  * @return
  */
-void * synchronize(void* args){
+void* synchronize(void* args){
     VideoChannel* videoChannel = static_cast<VideoChannel *>(args);
     videoChannel->synchronizeFrame();
+    LOGI("视频播放线程正常退出");
     return 0;
 }
 
@@ -88,8 +89,10 @@ void VideoChannel::stop() {
     isPlaying = false;
     //2. release thread deque packet thread .
     pthread_join(pid_video_play,NULL);
+    LOGI("pid_video_play destroy");
     //3. release the synchronize thread for frame transform and render .
     pthread_join(pid_synchronize,NULL);
+    LOGI("pid_synchronize destroy");
     //4. clear the queue .
     pkt_queue.clear();
     frame_queue.clear();
@@ -166,11 +169,9 @@ void VideoChannel::synchronizeFrame() {
     AVFrame* frame = 0;
     while (isPlaying){
         int ret = frame_queue.deQueue(frame);
-
         if(!isPlaying){
             break;
         }
-
         if(!ret){
             continue;
         }
@@ -236,7 +237,7 @@ void VideoChannel::synchronizeFrame() {
     }
 
     //释放资源.
-    av_free(&dst_data[0]);
+    av_free(dst_data[0]);
     isPlaying = false;
     releaseAvFrame(frame);
     sws_freeContext(swsContext);
