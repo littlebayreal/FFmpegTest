@@ -42,6 +42,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved){
  */
 void renderFrame(uint8_t* data, int linesize , int w, int h){
     pthread_mutex_lock(&mutex);
+    if (!window){
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
     //开始渲染 .
     LOGE("renderFrame start()!~...");
     //对本地窗口设置缓冲区大小RGBA .
@@ -146,7 +150,7 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerStop(JNIEnv *env, jobject 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerRelease(JNIEnv *env, jobject thiz) {
-    LOGE("native_1release");
+    LOGE("native_release");
     pthread_mutex_lock(&mutex);
     if (window){
         ANativeWindow_release(window);

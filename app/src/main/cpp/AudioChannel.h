@@ -27,11 +27,11 @@ public:
     /**
            * 暂停播放
            */
-    virtual void pause() = 0;
+    virtual void pause();
     /**
      * 继续播放
      */
-    virtual void resume() = 0;
+    virtual void resume();
     virtual void seek(long ms);
 
     void initOpenSL();

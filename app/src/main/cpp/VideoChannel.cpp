@@ -6,18 +6,18 @@
  * 丢AVPacket ，丢非I帧.
  * @param q
  */
-void dropPacket(queue<AVPacket *> &q){
-    LOGE("丢弃视频Packet.....");
-    while (!q.empty()){
-        AVPacket* pkt = q.front();
-        if(pkt->flags != AV_PKT_FLAG_KEY){
-            q.pop();
-            BaseChannel::releaseAvPacket(pkt);
-        }else{
-            break;
-        }
-    }
-}
+//void dropPacket(queue<AVPacket *> &q){
+//    LOGE("丢弃视频Packet.....");
+//    while (!q.empty()){
+//        AVPacket* pkt = q.front();
+//        if(pkt->flags != AV_PKT_FLAG_KEY){
+//            q.pop();
+//            BaseChannel::releaseAvPacket(pkt);
+//        }else{
+//            break;
+//        }
+//    }
+//}
 
 /**
  * 丢掉frame帧. 清空frame队列.
@@ -25,10 +25,10 @@ void dropPacket(queue<AVPacket *> &q){
  */
 void dropFrame(queue<AVFrame *> &q){
     LOGE("丢弃视频Frame.....");
-    while (!q.empty()){
-        AVFrame* frame = q.front();
-        q.pop();
+    if (!q.empty()){
+        AVFrame *frame = q.front();
         BaseChannel::releaseAvFrame(frame);
+        q.pop();
     }
 }
 
@@ -41,13 +41,15 @@ VideoChannel::VideoChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContex
     this->avCodecContext = avCodecContext;
     this->avFormatContext = formatContext;
     pkt_queue.setReleaseCallback(releaseAvPacket);
-    pkt_queue.setSyncHandle(dropPacket);
+//    pkt_queue.setSyncHandle(dropPacket);
     frame_queue.setReleaseCallback(releaseAvFrame);
     frame_queue.setSyncHandle(dropFrame);
 }
 
 
+VideoChannel::~VideoChannel() {
 
+}
 /**
  * 解码线程.
  * @param args
@@ -177,6 +179,7 @@ void VideoChannel::render() {
     //每个画面显示的时间，也就是图片之间显示间隔，单位秒
     double frame_delay = 1.0/fps;
     while (isPlaying){
+        LOGI("视频渲染中");
         int ret = frame_queue.deQueue(frame);
         if(!isPlaying){
             break;
@@ -191,6 +194,7 @@ void VideoChannel::render() {
                   dst_data,dst_linesize);
         //记录这一帧视频画面播放相对时间
         clock = frame->best_effort_timestamp * av_q2d(time_base);
+        LOGI("视频渲染中 clock:%lf",clock);
         /**
          * 计算额外需要延迟播放的时间
          * When decoding, this signals how much the picture must be delayed.
@@ -208,9 +212,11 @@ void VideoChannel::render() {
             } else{
                 //比较音频与视频相对时间差：慢就追快就歇一会
                 double diff = clock - audioChannel->clock;//视频减音频
+                LOGI("视频渲染中 diff:%lf",diff);
                 if(diff > 0){//视频快
                     LOGE("视频快了：%lf",diff);
-                    if (diff >1){
+                    if (diff > 1){
+                        LOGE("视频渲染中：diff > 1 %lf",(delay *2 ) * 1000000);
                         av_usleep((delay *2 ) * 1000000);//差的比较大，慢慢赶
                     } else{
                         av_usleep((delay+diff) * 1000000);//差不多，多睡一会
@@ -234,8 +240,9 @@ void VideoChannel::render() {
         renderFrame(dst_data[0],dst_linesize[0],avCodecContext->width,avCodecContext->height);
         releaseAvFrame(frame);
     }
+    LOGI("视频渲染中 end");
     av_freep(&dst_data[0]);
-    isPlaying = 0;
+    isPlaying = false;
     releaseAvFrame(frame);
     sws_freeContext(swsContext);
     swsContext = 0;
