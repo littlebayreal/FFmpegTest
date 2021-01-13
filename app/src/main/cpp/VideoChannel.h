@@ -14,7 +14,9 @@
 typedef void (*RenderFrame) (uint8_t*,int,int,int);
 class VideoChannel :public BaseChannel{
 public:
-    VideoChannel(int id, JavaCallHelper *javaCallHelper1,AVCodecContext *codecContext,AVRational time_base,AVFormatContext* formatContext);
+    VideoChannel(int id, JavaCallHelper *javaCallHelper1,AVCodecContext *codecContext,AVRational time_base,
+            AVFormatContext* formatContext,pthread_mutex_t seekMutex,pthread_mutex_t mutex_pause,pthread_cond_t cond_pause);
+    ~VideoChannel();
     /**
      * 播放音频或视频.
      */
@@ -23,7 +25,14 @@ public:
      * 停止播放音频或视频.
      */
     virtual void stop();
-
+    /**
+        * 暂停播放
+        */
+    virtual void pause() = 0;
+    /**
+     * 继续播放
+     */
+    virtual void resume() = 0;
     virtual void seek(long ms);
     /**
      * 解码packet队列-》frame.
@@ -33,7 +42,7 @@ public:
     /**
      * YUV --》RGB888 .
      */
-    void synchronizeFrame();
+    void render();
 
     void setRenderFrame(RenderFrame renderFrame);
     void setFps(int fps);

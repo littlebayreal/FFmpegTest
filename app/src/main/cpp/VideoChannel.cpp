@@ -32,8 +32,10 @@ void dropFrame(queue<AVFrame *> &q){
     }
 }
 
-VideoChannel::VideoChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *avCodecContext,AVRational time_base,AVFormatContext* formatContext)
-        : BaseChannel(id, javaCallHelper, avCodecContext,time_base)
+VideoChannel::VideoChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *avCodecContext,AVRational time_base,AVFormatContext* formatContext,
+                           pthread_mutex_t _seekMutex,pthread_mutex_t _mutex_pause,
+                           pthread_cond_t _cond_pause)
+        : BaseChannel(id, javaCallHelper, avCodecContext,time_base,_seekMutex,_mutex_pause,_cond_pause)
 {
     this->javaCallHelper = javaCallHelper;
     this->avCodecContext = avCodecContext;
@@ -63,9 +65,9 @@ void * decode(void* args){
  * @param args
  * @return
  */
-void* synchronize(void* args){
+void* render_task(void* args){
     VideoChannel* videoChannel = static_cast<VideoChannel *>(args);
-    videoChannel->synchronizeFrame();
+    videoChannel->render();
     LOGI("视频播放线程正常退出");
     return 0;
 }
@@ -81,9 +83,14 @@ void VideoChannel::play() {
     //解码线程packet->frame.
     pthread_create(&pid_video_play, NULL ,decode , this);
     //播放线程 frame->yuv.
-    pthread_create(&pid_synchronize, NULL, synchronize,this);
+    pthread_create(&pid_synchronize, NULL, render_task,this);
 }
-
+void VideoChannel::pause() {
+    return;
+}
+void VideoChannel::resume() {
+    return;
+}
 void VideoChannel::stop() {
     //1. set the playing flag false.
     isPlaying = false;
@@ -146,7 +153,7 @@ void VideoChannel::decodePacket() {
     releaseAvPacket(packet);
 }
 
-void VideoChannel::synchronizeFrame() {
+void VideoChannel::render() {
 
     //从视频流中读取数据包 .
     SwsContext* swsContext = sws_getContext(
@@ -167,6 +174,8 @@ void VideoChannel::synchronizeFrame() {
     //绘制界面 .
     //转化：YUV->RGB.
     AVFrame* frame = 0;
+    //每个画面显示的时间，也就是图片之间显示间隔，单位秒
+    double frame_delay = 1.0/fps;
     while (isPlaying){
         int ret = frame_queue.deQueue(frame);
         if(!isPlaying){
@@ -176,71 +185,60 @@ void VideoChannel::synchronizeFrame() {
             continue;
         }
 
-        LOGE("synchronizeFrame！get frame success : %d",frame_queue.size());
-
-        sws_scale(swsContext , frame->data, frame->linesize ,0,frame->height,
-                  dst_data, dst_linesize);
-
-        frame->pts;
-        //已经获取了rgb数据，则回调给native-lib层使用.
-        renderFrame (dst_data[0],dst_linesize[0] , avCodecContext->width,avCodecContext->height);
-        //暂时没有来做到音视频同步，所以渲染一帧，等待16ms.
-        LOGE("解码一帧视频  %d",frame_queue.size());
-
-        clock = frame->pts*av_q2d(time_base);
-        //解码一帧视频延时时间.
-        double frame_delay = 1.0/fps;
-        //解码一帧花费的时间. 配置差的手机 解码耗时教旧，所以需要考虑解码时间.
-        double extra_delay = frame->repeat_pict/(2*fps);
+        //linesize:每一行存放的数据的字节数
+        sws_scale(swsContext,frame->data,frame->linesize,
+                  0,avCodecContext->height,
+                  dst_data,dst_linesize);
+        //记录这一帧视频画面播放相对时间
+        clock = frame->best_effort_timestamp * av_q2d(time_base);
+        /**
+         * 计算额外需要延迟播放的时间
+         * When decoding, this signals how much the picture must be delayed.
+         * extra_delay = repeat_pict / (2*fps)
+         * int repeat_pict;
+        */
+        double extra_delay = frame->repeat_pict / (2*fps);
+        //真实需要的时间间隔
         double delay = frame_delay + extra_delay;
+        if (!audioChannel){//没有音频
+            av_usleep(delay * 1000000);
+        } else{//有音频
+            if (clock == 0){
+                av_usleep(delay * 1000000);
+            } else{
+                //比较音频与视频相对时间差：慢就追快就歇一会
+                double diff = clock - audioChannel->clock;//视频减音频
+                if(diff > 0){//视频快
+                    LOGE("视频快了：%lf",diff);
+                    if (diff >1){
+                        av_usleep((delay *2 ) * 1000000);//差的比较大，慢慢赶
+                    } else{
+                        av_usleep((delay+diff) * 1000000);//差不多，多睡一会
+                    }
+                } else{//音频快
+                    LOGE("音频快了：%lf",diff);
+                    if(fabs(diff) >= 0.05){//差距比较大，考虑视频丢包
+                        releaseAvFrame(frame);
+                        frame_queue.sync();
+                        continue;
+                    } else{//差距没那么大，视频不用丢包，播放不延时就可以了
 
-        double audioClock = audioChannel->clock;
-        //计算当前视频帧和音频帧的时间差
-        double diff = clock - audioClock;
-
-        LOGE(" audio clock %d",audioClock);
-        LOGE(" video clock %d",clock);
-        LOGE(" fps %d",fps);
-        LOGE(" frame_delay %d",frame_delay);
-        LOGE(" extra_delay %d",extra_delay);
-
-
-        LOGE("-----------相差----------  %d ",diff);
-        if(clock > audioClock){//视频超前，睡一会.
-            LOGE("-----------视频超前，相差----------  %d",diff);
-            if(diff>1){
-                LOGE("-----------睡眠long----------  %d",(delay*2));
-                //差的太久了，那只能慢慢赶 不然卡好久  延迟差*2秒
-                av_usleep((delay*2)*1000000);
-            }else{
-                LOGE("-----------睡眠normal----------  %d",(delay+diff));
-                av_usleep((delay+diff)*1000000);
-            }
-
-        }else{//音频超前，需要丢帧进行处理 .
-            LOGE("-----------音频超前，相差----------  %d",diff);
-            if(abs(diff)>1){
-                //不休眠.
-            }else if(abs(diff) > 0.05){
-                //视频需要追赶.丢帧(非关键帧) 同步
-                releaseAvFrame(frame);
-                //会同步执行自定的syncHandle方法
-                frame_queue.sync();
-            }else{
-                //睡眠一秒
-                av_usleep((delay+diff)*1000000);
+                    }
+                }
             }
         }
-
-        //释放不需要的frame,frame已经没有利用价值了.
+        //没有音频才通过视频进度回调，有则以音频为主
+        if (javaCallHelper && !audioChannel){
+            javaCallHelper->onProgress(THREAD_CHILD,clock);
+        }
+        renderFrame(dst_data[0],dst_linesize[0],avCodecContext->width,avCodecContext->height);
         releaseAvFrame(frame);
     }
-
-    //释放资源.
-    av_free(dst_data[0]);
-    isPlaying = false;
+    av_freep(&dst_data[0]);
+    isPlaying = 0;
     releaseAvFrame(frame);
     sws_freeContext(swsContext);
+    swsContext = 0;
 }
 
 void VideoChannel::setRenderFrame(RenderFrame renderFrame) {
@@ -250,7 +248,6 @@ void VideoChannel::setRenderFrame(RenderFrame renderFrame) {
 void VideoChannel::setFps(int fps) {
     this->fps = fps;
 }
-
 void VideoChannel::seek(long ms) {
     LOGE("VideoChannel::seek has not implemeted!");
 }

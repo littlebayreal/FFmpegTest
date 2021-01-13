@@ -15,7 +15,9 @@ BeiPlayer::BeiPlayer(JavaCallHelper *_javaCallHelper, const char *dataSource) : 
 }
 
 BeiPlayer::~BeiPlayer() {
-
+    DELETE(url);
+    DELETE(javaCallHelper);
+    pthread_mutex_destroy(&seekMutex);
 }
 
 /**
@@ -92,7 +94,7 @@ void BeiPlayer::prepareFFmpeg() {
         }
 
         //3.3 创建解码器上下文
-        AVCodecContext *codecContext = avcodec_alloc_context3(codec);
+        codecContext = avcodec_alloc_context3(codec);
         if (!codecContext) {
             if (javaCallHelper) {
                 javaCallHelper->onError(THREAD_CHILD, FFMPEG_ALLOC_CODEC_CONTEXT_FAIL);
@@ -121,7 +123,7 @@ void BeiPlayer::prepareFFmpeg() {
             LOGI("读取到音频流:%d", i);
             //音频 交给audiochannel处理
             audioChannel = new AudioChannel(i, javaCallHelper, codecContext, stream->time_base,
-                                            formatContext);
+                                            formatContext,seekMutex,mutex_pause,cond_pause);
         } else if (AVMEDIA_TYPE_VIDEO == codecParameters->codec_type) {
             LOGI("读取到视频流:%d", i);
             //视频的帧率.
@@ -131,7 +133,7 @@ void BeiPlayer::prepareFFmpeg() {
 
             //视频 交给videochannel处理
             videoChannel = new VideoChannel(i, javaCallHelper, codecContext, stream->time_base,
-                                            formatContext);
+                                            formatContext,seekMutex,mutex_pause,cond_pause);
             videoChannel->setRenderFrame(renderFrame);
             videoChannel->setFps(fps);
 
@@ -159,7 +161,25 @@ void* startThread(void *args) {
     beiFFmpeg->play();//开始从mp4中读取packet
     return 0;
 }
+void* syncStop(void *args){
+    LOGE("syncStop");
+    BeiPlayer *ffmpeg = static_cast<BeiPlayer *>(args);
+    //等待prepare与play逻辑执行完在释放以下资源
+    pthread_join(ffmpeg->pid_prepare,0);
+    pthread_join(ffmpeg->pid_play,0);
 
+    DELETE(ffmpeg->audioChannel);
+    DELETE(ffmpeg->videoChannel);
+
+    if (ffmpeg->formatContext){
+        //先关闭读取流
+        avformat_close_input(&ffmpeg->formatContext);
+        avformat_free_context(ffmpeg->formatContext);
+        ffmpeg->formatContext = nullptr;
+    }
+    DELETE(ffmpeg);
+    return 0;
+}
 /**
  * 打开播放标志，开始解码.
  */
@@ -167,7 +187,6 @@ void BeiPlayer::start() {
     LOGI("start");
     //播放成功.
     isPlaying = true;
-    //开启解码.
     //音频解码
     if (audioChannel) {
         audioChannel->play();
@@ -189,7 +208,14 @@ void BeiPlayer::start() {
 void BeiPlayer::play() {
     int ret = 0;
     while (isPlaying) {
-        LOGI("队列为空指针:%d", audioChannel->pkt_queue.size());
+        //暂停逻辑
+        pthread_mutex_lock(&mutex_pause);
+        while (isPause){
+            pthread_cond_wait(&cond_pause,&mutex_pause);
+        }
+        pthread_mutex_unlock(&mutex_pause);
+        LOGI("队列大小:%d", audioChannel->pkt_queue.size());
+        //防止读取文件一下子读完了，导致oom
         //如果队列数据大于100则延缓解码速度.
         if (audioChannel && audioChannel->pkt_queue.size() > 100) {
             //思想，生产者的速度远远大于消费者.  10ms.
@@ -237,6 +263,10 @@ void BeiPlayer::play() {
     if (videoChannel) {
         videoChannel->stop();
     }
+    if(codecContext){
+        avcodec_close(codecContext);
+        avcodec_free_context(&codecContext);
+    }
 }
 
 void BeiPlayer::setRenderCallBack(RenderFrame renderFrame) {
@@ -245,9 +275,27 @@ void BeiPlayer::setRenderCallBack(RenderFrame renderFrame) {
 
 void BeiPlayer::pause() {
     //先关闭播放状态.
-    isPlaying = false;
+    isPause = true;
+//    if (videoChannel){
+//        videoChannel->pause();
+//    }
+//    if (audioChannel){
+//        audioChannel->pause();
+//    }
 }
-
+void BeiPlayer::resume() {
+    isPause = false;
+//    if (videoChannel){
+//        videoChannel->resume();
+//    }
+//    if (audioChannel){
+//        audioChannel->resume();
+//    }
+    //唤醒线程
+//    pthread_mutex_lock(&mutex_pause);
+//    pthread_cond_broadcast(&cond_pause);
+//    pthread_mutex_unlock(&mutex_pause);
+}
 void BeiPlayer::stop() {
     LOGI("stop beiplayer");
     //先关闭播放状态.
@@ -256,7 +304,9 @@ void BeiPlayer::stop() {
 
 //    pthread_join(pid_prepare, NULL);
     LOGI("pid_prepare线程停止");
+    javaCallHelper = nullptr;
 
+    pthread_create(&pid_stop,0,syncStop,this);
 //    if(audioChannel){
 //        audioChannel->stop();
 //    }
@@ -270,10 +320,39 @@ void BeiPlayer::stop() {
 
 //seek the frame to dest .
 void BeiPlayer::seek(long ms) {
-    //优先seek audio,如果没有audio则seek视频.
-    if (audioChannel) {
-        audioChannel->seek(ms);
-    } else if (videoChannel) {
-        videoChannel->seek(ms);
+    //音视频都没有seek毛线啊
+    if (!audioChannel && !videoChannel){
+        return;
     }
+
+    if(!formatContext){
+        return;
+    }
+//    pthread_mutex_lock(&seekMutex);
+//    LOGI("seek 开始");
+    int64_t seekToTime = ms* 1000;//转为微妙
+    /**
+     * seek到请求的时间 之前最近的关键帧,只有从关键帧才能开始解码出完整图片
+     * stream_index:可以控制快进音频还是视频，-1表示音视频均快进
+     */
+    LOGI("seek 开始前:%ld",seekToTime);
+    av_seek_frame(formatContext,-1,seekToTime,AVSEEK_FLAG_BACKWARD);
+    LOGI("seek 结束后:%ld",seekToTime);
+    //清空解码器中缓存的数据
+    if (codecContext){
+        avcodec_flush_buffers(codecContext);
+    }
+
+    if (audioChannel){
+        audioChannel->stop();
+//        audioChannel->pkt_queue.clear();
+        audioChannel->play();
+    }
+
+    if (videoChannel){
+        videoChannel->stop();
+//        videoChannel->pkt_queue.clear();
+        videoChannel->play();
+    }
+//    pthread_mutex_unlock(&seekMutex)
 }

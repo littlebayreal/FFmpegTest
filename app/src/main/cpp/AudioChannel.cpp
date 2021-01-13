@@ -5,8 +5,10 @@
 void* audioPlay(void* args);
 void * audioDecode(void* args);
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
-AudioChannel::AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *avCodecContext,AVRational time_base, AVFormatContext* formatContext)
-        : BaseChannel(id, javaCallHelper, avCodecContext,time_base)
+AudioChannel::AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *avCodecContext,AVRational time_base, AVFormatContext* formatContext,
+                           pthread_mutex_t _seekMutex,pthread_mutex_t _mutex_pause,
+                           pthread_cond_t _cond_pause)
+        : BaseChannel(id, javaCallHelper, avCodecContext,time_base,_seekMutex,_mutex_pause,_cond_pause)
 {
     LOGI("AudioChannel构造函数");
     this->javaCallHelper = javaCallHelper;
@@ -28,6 +30,12 @@ AudioChannel::AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContex
 //    pkt_queue.setSyncHandle(syncHandle);
 //    frame_queue.setSyncHandle(syncFrameHandle);
 }
+AudioChannel::~AudioChannel() {
+    if (buffer){//释放内存
+        free(buffer);
+        buffer = 0;
+    }
+}
 void AudioChannel::play() {
 //    初始化转换器上下文,设置重采样 .
     swrContext = swr_alloc_set_opts(0,AV_CH_LAYOUT_STEREO,AV_SAMPLE_FMT_S16,out_sample_rate,
@@ -46,16 +54,50 @@ void AudioChannel::play() {
     //播放线程 frame->yuv.
     pthread_create(&pid_audio_decode, NULL, audioDecode,this);
 }
+void AudioChannel::pause() {
+    return;
+}
+void AudioChannel::resume() {
+    return;
+}
 void AudioChannel::stop() {
-    //1. set the playing flag false.
-    isPlaying = false;
-    //2. release thread deque packet thread . pthread_join 子线程执行完毕之后 主线程才会继续向下执行
-//    pthread_join(pid_audio_decode,NULL);
-    //3. release the synchronize thread for frame transform and render .
-//    pthread_join(pid_audio_play,NULL);
-    //4. clear the queue .
-    pkt_queue.clear();
-    frame_queue.clear();
+    LOGE("AudioChannel::stop()");
+    isPlaying = 0;
+    pkt_queue.setWork(0);
+    frame_queue.setWork(0);
+    pthread_join(pid_audio_decode,0);
+    pthread_join(pid_audio_play,0);
+
+    //设置停止状态
+    if (bqPlayerInterface) {
+        (*bqPlayerInterface)->SetPlayState(bqPlayerInterface, SL_PLAYSTATE_STOPPED);
+        bqPlayerInterface = 0;
+    }
+
+    //释放播放器
+    if(bqPlayerObject){
+        (*bqPlayerObject)->Destroy(bqPlayerObject);
+        bqPlayerObject = 0;
+        bqPlayerBufferQueue = 0;
+    }
+
+    //释放混音器
+    if(outputMixObject){
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = 0;
+    }
+
+    //释放引擎
+    if(engineObject){
+        (*engineObject)->Destroy(engineObject);
+        engineObject = 0;
+        engineInterface = 0;
+    }
+
+    if (swrContext){
+        swr_free(&swrContext);
+        swrContext = 0;
+    }
 }
 //线程中执行播放方法
 void* audioPlay(void* args){
@@ -74,20 +116,19 @@ void* audioDecode(void* args){
  */
 void AudioChannel::initOpenSL() {
     LOGE("initOpenSL() !");
-    //1. 音频引擎
-    SLEngineItf engineInterface = NULL;
-    //音频对象
-    SLObjectItf engineObject = NULL;
-    //2. 设置混音器
-    SLObjectItf outputMixObject = NULL;
-    //3. 创建播放器
-    SLObjectItf  bqPlayerObject = NULL;
-    // 回调接口.
-    SLPlayItf  bqPlayerInterface = NULL;
-    //4. 创建缓冲队列和回调函数
-//    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = NULL;
-    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue ;
-    //创建音频引擎 .
+//    //1. 音频引擎
+//    SLEngineItf engineInterface = NULL;
+//    //音频对象
+//    SLObjectItf engineObject = NULL;
+//    //2. 设置混音器
+//    SLObjectItf outputMixObject = NULL;
+//    //3. 创建播放器
+//    SLObjectItf  bqPlayerObject = NULL;
+//    // 回调接口.
+//    SLPlayItf  bqPlayerInterface = NULL;
+//    //4. 创建缓冲队列和回调函数
+//    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue ;
+//    //创建音频引擎 .
 
     // ----------------------------1. 初始化播放器引擎-----------------------------------------------
     SLresult  result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
@@ -204,6 +245,8 @@ void AudioChannel::decoder() {
         if(!ret){
             continue;
         }
+        //与seek逻辑清空codecContext解码器中缓存数据同步,否则多线程操作codecContext会有同步问题
+        pthread_mutex_lock(&seekMutex);
         LOGE("avcodec_send_packet start ! codecContext:%s",avCodecContext);
         //packet送去解码
         ret = avcodec_send_packet(avCodecContext, packet);
@@ -222,7 +265,7 @@ void AudioChannel::decoder() {
         AVFrame* avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext , avFrame);
         LOGE("avcodec_receive_frame success ! avFrame:%s",avFrame);
-
+        pthread_mutex_unlock(&seekMutex);
         if(ret == AVERROR(EAGAIN)){
             //需要更多数据
             continue;

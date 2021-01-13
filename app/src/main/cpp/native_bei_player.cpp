@@ -23,7 +23,8 @@ extern "C"{
 ANativeWindow* window = 0;
 BeiPlayer* mBeiPlayer = NULL;
 JavaCallHelper* javaCallHelper;
-
+//初始化线程锁
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 //子线程想要回调java层就必须要先绑定到jvm.
 JavaVM* javaVm = NULL;
 
@@ -40,17 +41,22 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved){
  * @param h
  */
 void renderFrame(uint8_t* data, int linesize , int w, int h){
+    pthread_mutex_lock(&mutex);
     //开始渲染 .
     LOGE("renderFrame start()!~...");
-    if(window == 0)return;
     //对本地窗口设置缓冲区大小RGBA .
-    ANativeWindow_setBuffersGeometry(window , w , h,
+    int ret = ANativeWindow_setBuffersGeometry(window , w , h,
                                      WINDOW_FORMAT_RGBA_8888);
-
+    if (ret != 0){
+        LOGE("ANativeWindow_setBuffersGeometry failed");
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
     ANativeWindow_Buffer windowBuffer;
     if(ANativeWindow_lock(window, &windowBuffer,0)) {
         ANativeWindow_release(window);
-        window = 0;
+        window = nullptr;
+        pthread_mutex_unlock(&mutex);
         return;
     }
 
@@ -66,6 +72,7 @@ void renderFrame(uint8_t* data, int linesize , int w, int h){
     }
     ANativeWindow_unlockAndPost(window);
     LOGE("renderFrame finished()!~...");
+    pthread_mutex_unlock(&mutex);
 }
 
 extern "C"
@@ -100,6 +107,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerSetSurface(JNIEnv *env, jobject thiz, jobject surface) {
     LOGE("set native surface invocked!");
+    pthread_mutex_lock(&mutex);
     //释放之前的window实例.
     if(window){
         ANativeWindow_release(window);
@@ -107,35 +115,48 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerSetSurface(JNIEnv *env, jo
     }
     //创建AWindow.
     window = ANativeWindow_fromSurface(env, surface);
+    pthread_mutex_unlock(&mutex);
     return window == nullptr ? -1:0;
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerPause(JNIEnv *env, jobject thiz) {
-    // TODO: implement native_pause()
     if(mBeiPlayer){
         mBeiPlayer->pause();
     }
 }
-
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerResume(JNIEnv *env, jobject thiz) {
+    if (mBeiPlayer){
+        mBeiPlayer->resume();
+    }
+}
 //关闭解码线程，释放资源.
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerStop(JNIEnv *env, jobject thiz) {
-    // TODO: implement native_close()
-    if(window){
-        ANativeWindow_release(window);
-        window = 0;
-    }
     //1. 停止video解码
     if(mBeiPlayer){
         mBeiPlayer->stop();
     }
+    DELETE(javaCallHelper);
     //2 .停止audio解码.
-}extern "C"
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerRelease(JNIEnv *env, jobject thiz) {
+    LOGE("native_1release");
+    pthread_mutex_lock(&mutex);
+    if (window){
+        ANativeWindow_release(window);
+        window = nullptr;
+    }
+    pthread_mutex_unlock(&mutex);
+}
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerSeek(JNIEnv *env, jobject thiz, jlong ms) {
-    // TODO: implement native_seek()
     if(mBeiPlayer){
         mBeiPlayer->seek(ms);
     }

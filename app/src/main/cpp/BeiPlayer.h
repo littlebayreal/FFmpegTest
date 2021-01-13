@@ -30,15 +30,21 @@ extern "C"{
 
 //播放控制.
 class BeiPlayer {
+private:
+    bool isPause = false;
+    int duration;
+    pthread_mutex_t seekMutex;
+    pthread_mutex_t mutex_pause = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t cond_pause = PTHREAD_COND_INITIALIZER;
 public:
     BeiPlayer(JavaCallHelper* _javaCallHelper, const char* dataSource);
     ~BeiPlayer();
-
     void prepare();
     void prepareFFmpeg();
     void start();
     void play();
     void pause();
+    void resume();
     void stop();
     void setRenderCallBack(RenderFrame renderFrame);
     void seek(long ms);
@@ -46,8 +52,10 @@ public:
     bool isPlaying;
     pthread_t pid_prepare;//准备完成后销毁.
     pthread_t pid_play;// 解码线程，一直存在直到播放完成.
+    pthread_t pid_stop;//关闭播放器线程
     char* url;
     AVFormatContext* formatContext;
+    AVCodecContext * codecContext;
     JavaCallHelper* javaCallHelper;
     VideoChannel* videoChannel;
     AudioChannel* audioChannel;

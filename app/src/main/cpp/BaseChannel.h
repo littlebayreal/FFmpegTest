@@ -30,10 +30,15 @@ extern "C"{
 class BaseChannel {
 public:
     BaseChannel(int id, JavaCallHelper* javaCallHelper,
-                AVCodecContext* codecContext,AVRational time_base):channelId(id),
+                AVCodecContext* codecContext,AVRational time_base,
+                pthread_mutex_t _seekMutex,pthread_mutex_t _mutex_pause,
+                pthread_cond_t _cond_pause):channelId(id),
                                                                    javaCallHelper(javaCallHelper),
                                                                    avCodecContext(codecContext),
-                                                                   time_base(time_base)
+                                                                   time_base(time_base),
+                                                                   seekMutex(_seekMutex),
+                                                                   mutex_pause(_mutex_pause),
+                                                                   cond_pause(_cond_pause)
     {
 
     }
@@ -79,7 +84,14 @@ public:
      * 停止播放音频或视频.
      */
     virtual void stop()=0;
-
+    /**
+     * 暂停播放
+     */
+    virtual void pause() = 0;
+    /**
+     * 继续播放
+     */
+    virtual void resume() = 0;
     /**
      * seek video.
      * @param ms
@@ -95,6 +107,9 @@ public:
     AVFormatContext* avFormatContext;
     JavaCallHelper* javaCallHelper;
     AVRational time_base;
+    pthread_mutex_t seekMutex;
+    pthread_mutex_t mutex_pause;
+    pthread_cond_t cond_pause;
 };
 
 #endif //FFMPEGTEST_BASECHANNEL_H

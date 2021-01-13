@@ -13,7 +13,9 @@
 class AudioChannel : public BaseChannel {
 
 public:
-    AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *codecContext,AVRational time_base,AVFormatContext* formatContext);
+    AudioChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContext *codecContext,AVRational time_base,
+            AVFormatContext* formatContext,pthread_mutex_t seekMutex,pthread_mutex_t mutex_pause,pthread_cond_t cond_pause);
+    ~AudioChannel();
     /**
      * 播放音频或视频.
      */
@@ -22,7 +24,14 @@ public:
      * 停止播放音频或视频.
      */
     virtual void stop();
-
+    /**
+           * 暂停播放
+           */
+    virtual void pause() = 0;
+    /**
+     * 继续播放
+     */
+    virtual void resume() = 0;
     virtual void seek(long ms);
 
     void initOpenSL();
@@ -41,6 +50,18 @@ private:
     int out_channels; //通道数
     int out_samplesize;//采样率
     int out_sample_rate;//采样频率.
+
+    //引擎与引擎接口
+    SLObjectItf engineObject = 0;
+    SLEngineItf engineInterface = 0;
+    //混音器
+    SLObjectItf outputMixObject = 0;
+    //播放器
+    SLObjectItf bqPlayerObject = 0;
+    //播放器接口
+    SLPlayItf bqPlayerInterface = 0;
+    //数据缓冲区
+    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue =0;
 public:
     //音频原始数据
     uint8_t * buffer;

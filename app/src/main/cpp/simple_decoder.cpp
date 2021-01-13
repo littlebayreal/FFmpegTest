@@ -405,13 +405,4 @@ Java_com_example_ffmpegtest_SimpleDecodeActivity_returnDecode(JNIEnv *env, jobje
     }
     return 0;
 }
-//JNIEXPORT void JNICALL
-//Java_com_example_ffmpegtest_SimpleDecodeActivity_setDecodeListener(JNIEnv *env, jobject thiz,jobject decode_listener) {
-//    // TODO: implement setDecodeListener()
-//    //JavaVM是虚拟机在JNI中的表示，等下再其他线程回调java层需要用到
-//    env->GetJavaVM(&g_VM);
-//    // 生成一个全局引用保留下来，以便回调
-//    g_obj = env->NewGlobalRef(thiz);
-//    return ;
-//}
 }

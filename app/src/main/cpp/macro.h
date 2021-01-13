@@ -9,6 +9,9 @@
 #define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "BeiPlayer", format, ##__VA_ARGS__)
 #define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO,  "BeiPlayer", format, ##__VA_ARGS__)
 
+//宏函数
+#define DELETE(obj) if(obj){ delete obj; obj = 0; }
+
 #define THREAD_MAIN 1
 #define THREAD_CHILD 2
 

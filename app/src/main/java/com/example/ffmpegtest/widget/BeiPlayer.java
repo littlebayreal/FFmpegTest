@@ -53,8 +53,7 @@ public class BeiPlayer implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        int ret = beiPlayerSetSurface(mSurfaceHolder.getSurface());
-        Log.i(TAG,"创建显示屏幕:"+ ret);
+        beiPlayerSetSurface(mSurfaceHolder.getSurface());
     }
 
     @Override
@@ -119,4 +118,6 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     public native void beiPlayerSeek(long time);
     public native void beiPlayerPause();
     public native void beiPlayerStop();
+    public native void beiPlayerRelease();
+    public native void beiPlayerResume();
 }

@@ -66,7 +66,7 @@ public class BeiPlayerActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // TODO: 2020/4/22 结束seek后进行seek操作.
-//                mPlayer.seek(10*60*1000);
+                mPlayer.seek(10*60*1000);
             }
         });
 
@@ -120,7 +120,6 @@ public class BeiPlayerActivity extends AppCompatActivity {
         if(null != mPlayer){
             Log.i(TAG,"关闭播放器");
             mPlayer.beiPlayerPause();
-            mPlayer.beiPlayerStop();
         }
     }
 
@@ -139,7 +138,7 @@ public class BeiPlayerActivity extends AppCompatActivity {
         super.onDestroy();
         if(null != mPlayer){
             Log.i(TAG,"关闭播放器");
-            mPlayer.beiPlayerStop();
+            mPlayer.beiPlayerRelease();
         }
     }
 }
