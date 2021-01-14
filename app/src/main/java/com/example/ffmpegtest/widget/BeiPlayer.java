@@ -40,6 +40,9 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     public void seek(long milliseconds){
         beiPlayerSeek(milliseconds);
     }
+    public int getDuration(){
+        return beiPlayerGetDuration();
+    }
     //Ndk player need path and surfaceview .
     public void setSurfaceView(SurfaceView surfaceView){
 
@@ -120,4 +123,5 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     public native void beiPlayerStop();
     public native void beiPlayerRelease();
     public native void beiPlayerResume();
+    public native int beiPlayerGetDuration();
 }

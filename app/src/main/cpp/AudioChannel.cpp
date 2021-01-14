@@ -63,11 +63,11 @@ void AudioChannel::play() {
 }
 
 void AudioChannel::pause() {
-    return;
+    (*bqPlayerInterface)->SetPlayState(bqPlayerInterface, SL_PLAYSTATE_PAUSED);
 }
 
 void AudioChannel::resume() {
-    return;
+    (*bqPlayerInterface)->SetPlayState(bqPlayerInterface, SL_PLAYSTATE_PLAYING);
 }
 
 void AudioChannel::stop() {
@@ -211,7 +211,7 @@ void AudioChannel::initOpenSL() {
 }
 
 void AudioChannel::decoder() {
-    LOGE("AudioChannel::decoder()  ! isPlaying: %d", isPlaying);
+    LOGE("AudioChannel::decoder()  isPlaying: %d", isPlaying);
     AVPacket *packet = 0;
     while (isPlaying) {
         //音频的pakcket.
@@ -219,46 +219,48 @@ void AudioChannel::decoder() {
         int ret = pkt_queue.deQueue(packet);
         LOGE("AudioChannel::decoder() #dequeue success# !%s", packet);
         if (!isPlaying) {
+            LOGE("AudioChannel::decoder() break");
             break;
         }
-
         if (!ret) {
+            LOGE("AudioChannel::decoder() continue");
             continue;
         }
         //与seek逻辑清空codecContext解码器中缓存数据同步,否则多线程操作codecContext会有同步问题
         pthread_mutex_lock(&seekMutex);
-        LOGE("avcodec_send_packet start ! codecContext:%s", avCodecContext);
+        LOGE("AudioChannel::decoder() avcodec_send_packet start ! codecContext:%s", avCodecContext);
         //packet送去解码
         ret = avcodec_send_packet(avCodecContext, packet);
 
         releaseAvPacket(packet);
         if (ret == AVERROR(EAGAIN)) {
-            LOGE("avcodec_send_packet EAGAIN 等待数据包！");
+            LOGE("AudioChannel::decoder() avcodec_send_packet EAGAIN 等待数据包！");
             //需要更多数据
+            LOGE("AudioChannel::decoder() 需要更多数据");
             continue;
         } else if (ret < 0) {
-            LOGE("avcodec_send_packet FAilure ret < 0 %d", ret);
+            LOGE("AudioChannel::decoder() avcodec_send_packet FAilure ret < 0 %d", ret);
             //失败
             break;
         }
 
         AVFrame *avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext, avFrame);
-        LOGE("avcodec_receive_frame success ! avFrame:%s", avFrame);
+        LOGE("AudioChannel::decoder() avcodec_receive_frame success ! avFrame:%s", avFrame);
         pthread_mutex_unlock(&seekMutex);
         if (ret == AVERROR(EAGAIN)) {
             //需要更多数据
             continue;
         } else if (ret < 0) {
-            LOGE("avcodec_receive_frame FAilure ret < 0 %d", ret);
+            LOGE("AudioChannel::decoder() avcodec_receive_frame FAilure ret < 0 %d", ret);
             //失败
             break;
         }
         //packet -》frame.
         frame_queue.enQueue(avFrame);
-        LOGE("frame_queue enQueue success ! :%d", frame_queue.size());
+        LOGE("AudioChannel::decoder() frame_queue enQueue success ! :%d", frame_queue.size());
         while (frame_queue.size() > 100 && isPlaying) {
-            LOGE("frame_queue %d is full, sleep 16 ms", frame_queue.size());
+            LOGE("AudioChannel::decoder() frame_queue %d is full, sleep 16 ms", frame_queue.size());
             av_usleep(16 * 1000);
             continue;
         }

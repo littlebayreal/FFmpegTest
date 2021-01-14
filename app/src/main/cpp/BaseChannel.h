@@ -99,6 +99,7 @@ public:
     virtual void seek(long ms)=0;
 
 public:
+    bool isPause = 0;
     SafeQueue<AVPacket *> pkt_queue;
     SafeQueue<AVFrame *> frame_queue;
     volatile int channelId;

@@ -32,7 +32,7 @@ extern "C"{
 class BeiPlayer {
 private:
     bool isPause = false;
-    int duration;
+    int duration = 0;
     pthread_mutex_t seekMutex;
     pthread_mutex_t mutex_pause = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond_pause = PTHREAD_COND_INITIALIZER;
@@ -48,6 +48,7 @@ public:
     void stop();
     void setRenderCallBack(RenderFrame renderFrame);
     void seek(long ms);
+    int getDuration();
 public:
     bool isPlaying;
     pthread_t pid_prepare;//准备完成后销毁.

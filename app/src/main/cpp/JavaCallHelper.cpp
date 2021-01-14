@@ -34,7 +34,6 @@ void JavaCallHelper::onPrepare(int thread) {
 }
 
 void JavaCallHelper::onProgress(int thread, int progress) {
-
     if(thread == THREAD_CHILD){
         JNIEnv* jniEnv;
         if((javaVm->AttachCurrentThread(&jniEnv , 0)) != JNI_OK){

@@ -88,23 +88,24 @@ void VideoChannel::play() {
     pthread_create(&pid_synchronize, NULL, render_task,this);
 }
 void VideoChannel::pause() {
-    return;
+    LOGI("暂停视频渲染");
+    isPause = true;
 }
 void VideoChannel::resume() {
-    return;
+    LOGI("继续视频渲染");
+    isPause = false;
+    //唤醒线程继续工作
+    pthread_mutex_lock(&mutex_pause);
+    pthread_cond_broadcast(&cond_pause);
+    pthread_mutex_unlock(&mutex_pause);
 }
 void VideoChannel::stop() {
-    //1. set the playing flag false.
+    LOGE("VideoChannel::stop()");
     isPlaying = false;
-    //2. release thread deque packet thread .
-    pthread_join(pid_video_play,NULL);
-    LOGI("pid_video_play destroy");
-    //3. release the synchronize thread for frame transform and render .
-    pthread_join(pid_synchronize,NULL);
-    LOGI("pid_synchronize destroy");
-    //4. clear the queue .
-    pkt_queue.clear();
-    frame_queue.clear();
+    pkt_queue.setWork(0);
+    frame_queue.setWork(0);
+    pthread_join(pid_video_play, 0);
+    pthread_join(pid_synchronize, 0);
 }
 
 /**
@@ -156,7 +157,6 @@ void VideoChannel::decodePacket() {
 }
 
 void VideoChannel::render() {
-
     //从视频流中读取数据包 .
     SwsContext* swsContext = sws_getContext(
             avCodecContext->width,avCodecContext->height,
@@ -179,6 +179,12 @@ void VideoChannel::render() {
     //每个画面显示的时间，也就是图片之间显示间隔，单位秒
     double frame_delay = 1.0/fps;
     while (isPlaying){
+        //暂停逻辑
+        pthread_mutex_lock(&mutex_pause);
+        while (isPause){
+            pthread_cond_wait(&cond_pause,&mutex_pause);
+        }
+        pthread_mutex_unlock(&mutex_pause);
         LOGI("视频渲染中");
         int ret = frame_queue.deQueue(frame);
         if(!isPlaying){

@@ -165,3 +165,12 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerSeek(JNIEnv *env, jobject 
         mBeiPlayer->seek(ms);
     }
 }
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerGetDuration(JNIEnv *env, jobject thiz) {
+    if(mBeiPlayer){
+        return mBeiPlayer->getDuration();
+        LOGI("JNI getDuration:%d",mBeiPlayer->getDuration());
+    }
+    return 0;
+}
