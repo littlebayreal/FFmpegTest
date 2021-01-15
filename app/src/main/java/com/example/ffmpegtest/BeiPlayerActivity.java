@@ -1,6 +1,7 @@
 package com.example.ffmpegtest;
 
 import android.Manifest;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +42,8 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
     private boolean isSeek;
     private TextView progress_time;
     private TextView total_time;
-    Button play,pause;
+    private ImageView screen_shot_image;
+    Button play,pause,screen_shot;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,8 +55,11 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
         mSurfaceView = findViewById(R.id.surface_view);
         play = findViewById(R.id.btn_play);
         pause = findViewById(R.id.btn_pause);
+        screen_shot = findViewById(R.id.btn_screen_shot);
         play.setOnClickListener(this);
         pause.setOnClickListener(this);
+        screen_shot.setOnClickListener(this);
+        screen_shot_image = findViewById(R.id.screen_shot_image);
         mSeekBar = findViewById(R.id.seek_bar);
         mUrlEtv = findViewById(R.id.edt_url);
         progress_time = findViewById(R.id.progress_time);
@@ -136,6 +142,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
                 isTouch = false;
                 mPorgress = mPlayer.getDuration() * seekBar.getProgress() / 100;
                 //进度调整
+                Log.i(TAG,"seek progress:"+ mPorgress);
                 mPlayer.seek(mPorgress);
             }
         });
@@ -217,6 +224,22 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
                     mPlayer.beiPlayerPause();
                 }
                 break;
+            case R.id.btn_screen_shot:
+                if(null != mPlayer){
+                    Log.i(TAG,"截图");
+                    byte[] yuv = mPlayer.beiPlayerScreenShot();
+                    Log.i(TAG,"截图 yuv"+ yuv.length);
+                    DrawScreenShot(yuv);
+                }
+                break;
+        }
+    }
+    public void DrawScreenShot(byte[] yuv){
+        if(yuv != null && yuv.length > 0){
+            int[] colors = SimpleDecodeActivity.convertByteToColor(yuv);
+            //长宽如果不正确 原始数据将会无法显示图片
+            Bitmap videoBitmap = Bitmap.createBitmap(colors,1080,606, Bitmap.Config.ARGB_8888);
+            screen_shot_image.setImageBitmap(videoBitmap);
         }
     }
 }

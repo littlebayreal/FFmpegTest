@@ -44,11 +44,12 @@ VideoChannel::VideoChannel(int id, JavaCallHelper *javaCallHelper, AVCodecContex
 //    pkt_queue.setSyncHandle(dropPacket);
     frame_queue.setReleaseCallback(releaseAvFrame);
     frame_queue.setSyncHandle(dropFrame);
+//    screen_shot_frame = av_frame_alloc();
 }
 
 
 VideoChannel::~VideoChannel() {
-
+//    releaseAvFrame(screen_shot_frame);
 }
 /**
  * 解码线程.
@@ -123,7 +124,6 @@ void VideoChannel::decodePacket() {
 //        LOGE("pkt_queue get packet susuccess :%d",ret);
         //解压frame.
 //        LOGE("avcodec_send_packet start !");
-
         if(!avCodecContext){
             LOGE("avCodecContext is NULL!");
         }
@@ -139,7 +139,7 @@ void VideoChannel::decodePacket() {
             //失败
             break;
         }
-        AVFrame* avFrame = av_frame_alloc();
+        AVFrame * avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext, avFrame);
         //延缓队列缓存的速度，大于100帧等待10ms。
         while(isPlaying && frame_queue.size() > 100){
@@ -151,7 +151,6 @@ void VideoChannel::decodePacket() {
         //放入缓存队列.
         frame_queue.enQueue(avFrame);
     }
-
     //保险起见
     releaseAvPacket(packet);
 }
@@ -175,7 +174,7 @@ void VideoChannel::render() {
                    AV_PIX_FMT_RGBA,1);
     //绘制界面 .
     //转化：YUV->RGB.
-    AVFrame* frame = 0;
+    AVFrame *frame = 0;
     //每个画面显示的时间，也就是图片之间显示间隔，单位秒
     double frame_delay = 1.0/fps;
     while (isPlaying){
@@ -193,7 +192,6 @@ void VideoChannel::render() {
         if(!ret){
             continue;
         }
-
         //linesize:每一行存放的数据的字节数
         sws_scale(swsContext,frame->data,frame->linesize,
                   0,avCodecContext->height,
@@ -243,6 +241,7 @@ void VideoChannel::render() {
         if (javaCallHelper && !audioChannel){
             javaCallHelper->onProgress(THREAD_CHILD,clock);
         }
+        screen_shot_frame = av_frame_clone(frame);
         renderFrame(dst_data[0],dst_linesize[0],avCodecContext->width,avCodecContext->height);
         releaseAvFrame(frame);
     }
@@ -261,6 +260,11 @@ void VideoChannel::setRenderFrame(RenderFrame renderFrame) {
 void VideoChannel::setFps(int fps) {
     this->fps = fps;
 }
-void VideoChannel::seek(long ms) {
-    LOGE("VideoChannel::seek has not implemeted!");
+void VideoChannel::seek() {
+    pkt_queue.setWork(0);
+    frame_queue.setWork(0);
+    pkt_queue.clear();
+    frame_queue.clear();
+    pkt_queue.setWork(1);
+    frame_queue.setWork(1);
 }

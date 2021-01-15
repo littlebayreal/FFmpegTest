@@ -106,7 +106,6 @@ public class SimpleDecodeActivity extends AppCompatActivity {
     // 将一个byte数转成int
     // 实现这个函数的目的是为了将byte数当成无符号的变量去转化成int
     public static int convertByteToInt(byte data) {
-
         int heightBit = (int) ((data >> 4) & 0x0F);
         int lowBit = (int) (0x0F & data);
         return heightBit * 16 + lowBit;

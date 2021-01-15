@@ -32,7 +32,7 @@ public:
      * 继续播放
      */
     virtual void resume();
-    virtual void seek(long ms);
+    virtual void seek();
 
     void initOpenSL();
 

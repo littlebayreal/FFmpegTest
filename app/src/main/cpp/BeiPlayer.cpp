@@ -338,30 +338,27 @@ void BeiPlayer::seek(long ms) {
         return;
     }
     pthread_mutex_lock(&seekMutex);
-//    LOGI("seek 开始");
-    int64_t seekToTime = ms * 1000;//转为微妙
+    LOGI("seek 开始 %ld",ms);
+    int64_t seekToTime = ms * AV_TIME_BASE;//转为微妙
+    LOGI("seek 开始后 %lld",seekToTime);
     /**
      * seek到请求的时间 之前最近的关键帧,只有从关键帧才能开始解码出完整图片
      * stream_index:可以控制快进音频还是视频，-1表示音视频均快进
      */
-    LOGI("seek 开始前:%ld", seekToTime);
+    LOGI("seek 开始前:%lld", seekToTime);
     av_seek_frame(formatContext, -1, seekToTime, AVSEEK_FLAG_BACKWARD);
-    LOGI("seek 结束后:%ld", seekToTime);
+    LOGI("seek 结束后:%lld", seekToTime);
     //清空解码器中缓存的数据
     if (codecContext) {
         avcodec_flush_buffers(codecContext);
     }
 
-    if (audioChannel) {
-        audioChannel->stop();
-//        audioChannel->pkt_queue.clear();
-        audioChannel->play();
+    if (audioChannel){
+        audioChannel->seek();
     }
 
-    if (videoChannel) {
-        videoChannel->stop();
-//        videoChannel->pkt_queue.clear();
-        videoChannel->play();
+    if (videoChannel){
+        videoChannel->seek();
     }
     pthread_mutex_unlock(&seekMutex);
 }
@@ -369,4 +366,15 @@ void BeiPlayer::seek(long ms) {
 int BeiPlayer::getDuration() {
     LOGI("获取播放时间 变量:%d",duration);
     return duration;
+}
+AVFrame * BeiPlayer::screenShot() {
+    LOGI("截屏开始");
+    if(videoChannel){
+        if(videoChannel->screen_shot_frame){
+            LOGI("截屏开始 %p",&videoChannel->screen_shot_frame);
+            LOGI("截屏开始 %lld",videoChannel->screen_shot_frame->best_effort_timestamp);
+            return videoChannel->screen_shot_frame;
+        }
+    }
+    return nullptr;
 }

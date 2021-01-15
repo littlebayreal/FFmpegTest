@@ -96,7 +96,7 @@ public:
      * seek video.
      * @param ms
      */
-    virtual void seek(long ms)=0;
+    virtual void seek()=0;
 
 public:
     bool isPause = 0;

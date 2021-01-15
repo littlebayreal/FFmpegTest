@@ -1,6 +1,7 @@
 package com.example.ffmpegtest.widget;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -35,11 +36,12 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     }
     /**
      * mp4文件seek .
-     * @param milliseconds
+     * @param seconds
      */
-    public void seek(long milliseconds){
-        beiPlayerSeek(milliseconds);
+    public void seek(long seconds){
+        beiPlayerSeek(seconds);
     }
+    //获取已播放时间  单位秒
     public int getDuration(){
         return beiPlayerGetDuration();
     }
@@ -124,4 +126,5 @@ public class BeiPlayer implements SurfaceHolder.Callback {
     public native void beiPlayerRelease();
     public native void beiPlayerResume();
     public native int beiPlayerGetDuration();
+    public native byte[] beiPlayerScreenShot();
 }

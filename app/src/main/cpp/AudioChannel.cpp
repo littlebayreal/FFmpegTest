@@ -353,18 +353,13 @@ int AudioChannel::getPcm() {
 }
 
 //seek frame ..
-void AudioChannel::seek(long ms) {
-    if (ms > 0) {
-        int64_t timestamp;
-        timestamp += ms;
-        int ret = avformat_seek_file(avFormatContext, channelId, INT64_MIN, timestamp, INT64_MAX,
-                                     AVSEEK_FLAG_BACKWARD);
-        LOGE("seek frame %d", ret);
-        if (ret < 0) {
-            LOGE("could not seek to position %0.3f\n", (double) timestamp / AV_TIME_BASE);
-        }
-
-    }
+void AudioChannel::seek() {
+    pkt_queue.setWork(0);
+    frame_queue.setWork(0);
+    pkt_queue.clear();
+    frame_queue.clear();
+    pkt_queue.setWork(1);
+    frame_queue.setWork(1);
 }
 
 

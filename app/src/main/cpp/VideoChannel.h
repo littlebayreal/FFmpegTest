@@ -33,7 +33,7 @@ public:
      * 继续播放
      */
     virtual void resume();
-    virtual void seek(long ms);
+    virtual void seek();
     /**
      * 解码packet队列-》frame.
      */
@@ -54,6 +54,7 @@ private:
 public:
     AudioChannel* audioChannel; //音视频同步使用 .
     double  clock;// 音视频同步使用.
+    AVFrame * screen_shot_frame;//截图视频帧的记录
 };
 
 #endif //FFMPEGTEST_VIDEOCHANNEL_H
