@@ -79,7 +79,57 @@ void renderFrame(uint8_t *data, int linesize, int w, int h) {
     LOGE("renderFrame finished()!~...");
     pthread_mutex_unlock(&mutex);
 }
-
+void onScreenShot(AVFrame* avFrame){
+//    if(mBeiPlayer) {
+//        mBeiPlayer->videoChannel->releaseAvFrame(avFrame);
+//        LOGI("释放avframe");
+//    }
+//    JNIEnv* env;
+//    if((javaVm->AttachCurrentThread(&env , 0)) != JNI_OK){
+//        return;
+//    }
+//    if(avFrame) {
+//        //rgb接收的容器
+//        AVFrame *pFrameYUV;//rgb.
+//        pFrameYUV = av_frame_alloc();
+//
+//        uint8_t *out_buffer;
+//
+//        AVFrame *origin_frame = avFrame;
+//        if (origin_frame == nullptr) {
+//            LOGE("获取图像帧失败");
+//        }
+//        AVCodecContext *codecContext = mBeiPlayer->videoChannel->avCodecContext;
+//
+//        out_buffer = (unsigned char *) av_malloc(
+//                av_image_get_buffer_size(AV_PIX_FMT_RGB24, codecContext->width,
+//                                         codecContext->height, 1));
+//
+//        av_image_fill_arrays(pFrameYUV->data, pFrameYUV->linesize, out_buffer,
+//                             AV_PIX_FMT_RGB24, codecContext->width, codecContext->height,
+//                             1);
+//
+//        LOGI("ScreenShot Width:%d Height:%d", origin_frame->width, origin_frame->height);
+//        LOGI("ScreenShot Width:%d Height:%d", codecContext->width, codecContext->height);
+//        SwsContext *img_convert_ctx = sws_getContext(codecContext->width, codecContext->height,
+//                                                     codecContext->pix_fmt,
+//                                                     codecContext->width, codecContext->height,
+//                                                     AV_PIX_FMT_RGB24,
+//                                                     SWS_BICUBIC, NULL, NULL, NULL);
+//
+//        sws_scale(img_convert_ctx, (const uint8_t *const *) origin_frame->data,
+//                  origin_frame->linesize,
+//                  0,
+//                  codecContext->height,
+//                  pFrameYUV->data, pFrameYUV->linesize);
+//
+//        int size = codecContext->height * codecContext->width;
+//        jbyteArray jbarray = env->NewByteArray(size * 3);
+//        env->SetByteArrayRegion(jbarray, 0, size * 3, (jbyte *) pFrameYUV->data[0]);
+//        LOGI("ScreenShot Jbarray:%d", size);
+//        return jbarray;
+//    }
+}
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerPrepare(JNIEnv *env, jobject thiz,
@@ -92,6 +142,7 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerPrepare(JNIEnv *env, jobje
     mBeiPlayer = new BeiPlayer(javaCallHelper, input);
     //设置回调监听
     mBeiPlayer->setRenderCallBack(renderFrame);
+//    mBeiPlayer->setScreenShotCallBack(onScreenShot);
     //进行准备
     mBeiPlayer->prepare();
     //释放资源.
@@ -181,6 +232,9 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerGetDuration(JNIEnv *env, j
 extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerScreenShot(JNIEnv *env, jobject thiz) {
+//    if (mBeiPlayer) {
+//       mBeiPlayer->screenShot();
+//    }
     if (mBeiPlayer) {
         if (mBeiPlayer->videoChannel) {
             //rgb接收的容器
@@ -209,7 +263,7 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerScreenShot(JNIEnv *env, jo
             LOGI("ScreenShot Width:%d Height:%d",codecContext->width,codecContext->height);
             SwsContext *img_convert_ctx = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt,
                                                          codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
-                                             SWS_BICUBIC, NULL, NULL, NULL);
+                                                         SWS_BICUBIC, NULL, NULL, NULL);
 
             sws_scale(img_convert_ctx, (const uint8_t *const *) origin_frame->data,
                       origin_frame->linesize,
