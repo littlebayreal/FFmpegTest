@@ -62,14 +62,14 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
     ret = avformat_open_input(&ictx, inUrl, 0, NULL);
     if (ret < 0) {
         LOGE("打开文件失败:%d", ret);
-        throw ret;
+        return ret;
     }
     LOGI("avformat_open_input success!");
     //获取音频视频的信息 .h264 flv 没有头信息
     ret = avformat_find_stream_info(ictx, 0);
     if (ret != 0) {
         LOGE("获取音视频信息失败:%d", ret);
-        throw ret;
+        return ret;
     }
     //打印视频视频信息
     //0打印所有  inUrl 打印时候显示，
@@ -83,7 +83,7 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
     ret = avformat_alloc_output_context2(&octx, NULL, "flv", outUrl);
     if (ret < 0) {
         LOGE("创建音视频输出流失败:%d", ret);
-        throw ret;
+        return ret;
     }
     LOGI("avformat_alloc_output_context2 success!");
     int i;
@@ -120,14 +120,14 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
     ret = avio_open(&octx->pb, outUrl, AVIO_FLAG_WRITE);
     if (ret < 0) {
         LOGE("输出流io打开错误");
-        throw ret;
+        return ret;
     }
     LOGI("avio_open success!");
     //写入头部信息
     ret = avformat_write_header(octx, 0);
     if (ret < 0) {
         LOGE("头部信息写入错误");
-        throw ret;
+        return ret;
     }
     LOGI("avformat_write_header Success!");
     //推流每一帧数据
@@ -145,7 +145,8 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
         if (ret < 0) {
             break;
         }
-
+        LOGI("发送H264裸流：%lf",(av_q2d(ictx->streams[videoindex]->time_base)));
+        LOGI("发送H264裸流：%lf",(av_q2d(ictx->streams[videoindex]->r_frame_rate)));
         //没有显示时间（比如未解码的 H.264 ）
         if (pkt.pts == AV_NOPTS_VALUE) {
             //AVRational time_base：时基。通过该值可以把PTS，DTS转化为真正的时间。
@@ -153,15 +154,15 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
 
             //计算两帧之间的时间
             /*
-            r_frame_rate 基流帧速率  （不是太懂）
+            r_frame_rate 帧率 通常是24、25fps
             av_q2d 转化为double类型
+            通过帧率计算1秒多少帧 也是一帧应该显示多长时间
             */
             int64_t calc_duration =
                     (double) AV_TIME_BASE / av_q2d(ictx->streams[videoindex]->r_frame_rate);
-
             //配置参数
             pkt.pts = (double) (frame_index * calc_duration) /
-                      (double) (av_q2d(time_base) * AV_TIME_BASE);
+                      (double) (av_q2d(time_base) * AV_TIME_BASE);//微秒/微秒
             //编码时间等于显示时间
             pkt.dts = pkt.pts;
             pkt.duration =
@@ -203,6 +204,7 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
         }
         //回调数据
 //        callback(env, pkt.pts, pkt.dts, pkt.duration, frame_index);
+//        LOGI("发送H264裸流：%lld",pkt.pts);
         //向输出上下文发送（向地址推送）
         ret = av_interleaved_write_frame(octx, &pkt);
 

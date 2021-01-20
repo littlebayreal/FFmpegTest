@@ -36,7 +36,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
     private EditText mUrlEtv;
 
     private BeiPlayer mPlayer;
-    private String mUrl = "rtmp://192.168.1.3:1935/oflaDemo/BladeRunner2049.flv";
+    private String mUrl = "rtmp://192.168.2.218/zxb/mylive";
 
     private boolean isTouch;//是否正在拖动seekBar
     private boolean isSeek;
@@ -65,7 +65,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
         progress_time = findViewById(R.id.progress_time);
         total_time = findViewById(R.id.total_time);
 //        mUrl = "http://ovopark-record.oss-cn-shanghai.aliyuncs.com/039570f6-e4c3-4a1b-9886-5ad7e6d7181f.mp4";
-        mUrl = "http://118.31.174.18:5581/rtmp/8e5196c4-e7d9-41b0-9080-fa0da638d9e2/live.flv";
+//        mUrl = "http://118.31.174.18:5581/rtmp/8e5196c4-e7d9-41b0-9080-fa0da638d9e2/live.flv";
         mUrlEtv.setText(mUrl);
         mPlayer = new BeiPlayer();
         mPlayer.setSurfaceView(mSurfaceView);
@@ -160,7 +160,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
      * 播放本地视频文件 /poe/input.mp4   3205837018613102
      */
     private void playLocal() {
-        File input = new File(Environment.getExternalStorageDirectory(),"/DCIM/三八线19.mp4");
+//        File input = new File(Environment.getExternalStorageDirectory(),"/DCIM/三八线19.mp4");
 //        File input = new File(getCacheDir(),"/input.mp4");
 //        Log.i("BeiPlayer","input file: "+input.getAbsolutePath());
 //        if(input.exists()){
@@ -169,8 +169,8 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
 //            Log.e("BeiPlayer","input 不存存在！");
 //        }
 
-        mPlayer.setDataSource(input.getAbsolutePath());
-//        mPlayer.setDataSource(mUrlEtv.getText().toString());
+//        mPlayer.setDataSource(input.getAbsolutePath());
+        mPlayer.setDataSource(mUrlEtv.getText().toString());
 //        mPlayer.setOnPrepareListener(new BeiPlayer.OnPrepareListener() {
 //            @Override
 //            public void onPrepare() {
@@ -238,7 +238,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
         if(yuv != null && yuv.length > 0){
             int[] colors = SimpleDecodeActivity.convertByteToColor(yuv);
             //长宽如果不正确 原始数据将会无法显示图片
-            Bitmap videoBitmap = Bitmap.createBitmap(colors,1080,606, Bitmap.Config.ARGB_8888);
+            Bitmap videoBitmap = Bitmap.createBitmap(colors,1280,720, Bitmap.Config.ARGB_8888);
             screen_shot_image.setImageBitmap(videoBitmap);
         }
     }
