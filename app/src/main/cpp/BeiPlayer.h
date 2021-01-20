@@ -49,7 +49,8 @@ public:
     void setRenderCallBack(RenderFrame renderFrame);
     void seek(long ms);
     int getDuration();
-    AVFrame * screenShot();
+    AVFrame *screenShot();
+    void setScreenShotCallBack(OnScreenShot onScreenShot);
 public:
     bool isPlaying;
     pthread_t pid_prepare;//准备完成后销毁.

@@ -160,7 +160,7 @@ public class BeiPlayerActivity extends AppCompatActivity implements View.OnClick
      * 播放本地视频文件 /poe/input.mp4   3205837018613102
      */
     private void playLocal() {
-        File input = new File(Environment.getExternalStorageDirectory(),"/DCIM/三八线18.mp4");
+        File input = new File(Environment.getExternalStorageDirectory(),"/DCIM/三八线19.mp4");
 //        File input = new File(getCacheDir(),"/input.mp4");
 //        Log.i("BeiPlayer","input file: "+input.getAbsolutePath());
 //        if(input.exists()){

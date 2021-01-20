@@ -367,14 +367,26 @@ int BeiPlayer::getDuration() {
     LOGI("获取播放时间 变量:%d",duration);
     return duration;
 }
-AVFrame * BeiPlayer::screenShot() {
+AVFrame *BeiPlayer::screenShot() {
     LOGI("截屏开始");
     if(videoChannel){
-        if(videoChannel->screen_shot_frame){
-            LOGI("截屏开始 %p",&videoChannel->screen_shot_frame);
-            LOGI("截屏开始 %lld",videoChannel->screen_shot_frame->best_effort_timestamp);
-            return videoChannel->screen_shot_frame;
-        }
+        return videoChannel->screenShot();
+//        videoChannel->screenShot();
+//        if(videoChannel->screen_shot_frame){
+//            LOGI("截屏开始 %p",&videoChannel->screen_shot_frame);
+//            LOGI("截屏开始 %lld",videoChannel->screen_shot_frame->best_effort_timestamp);
+//            return videoChannel->screen_shot_frame;
+//        }else{
+//            LOGI("截屏失败 screen_shot_frame为空");
+//        }
     }
     return nullptr;
+//    if(videoChannel){
+//        videoChannel->screenShot();
+//    }
+}
+void BeiPlayer::setScreenShotCallBack(OnScreenShot onScreenShot){
+    if (videoChannel){
+        videoChannel->setScreenShotCallback(onScreenShot);
+    }
 }
