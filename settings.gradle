@@ -1,2 +1,3 @@
+include ':pushstream'
 include ':app'
 rootProject.name = "FFmpegTest"

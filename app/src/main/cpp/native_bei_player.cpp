@@ -12,7 +12,7 @@ extern "C" {
 #include "libavformat/avformat.h"
 //解码器.
 #include "libavcodec/avcodec.h"
-//#缩放
+//缩放
 #include "libswscale/swscale.h"
 // 重采样
 #include "libswresample/swresample.h"
@@ -47,7 +47,7 @@ void renderFrame(uint8_t *data, int linesize, int w, int h) {
         pthread_mutex_unlock(&mutex);
         return;
     }
-    //开始渲染 .
+    //开始渲染.
     LOGE("renderFrame start()!~...");
     //对本地窗口设置缓冲区大小RGBA .
     int ret = ANativeWindow_setBuffersGeometry(window, w, h,
@@ -64,7 +64,6 @@ void renderFrame(uint8_t *data, int linesize, int w, int h) {
         pthread_mutex_unlock(&mutex);
         return;
     }
-
     //拿到window的缓冲区. window_data[0] = 255,就代表刷新了红色.
     uint8_t *window_data = static_cast<uint8_t *>(windowBuffer.bits);
 //    window_data = data; r g b a 每个元素占用4bit.

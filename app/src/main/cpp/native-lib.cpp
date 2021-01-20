@@ -124,6 +124,5 @@ Java_com_example_ffmpegtest_MainActivity_configurationinfo(JNIEnv *env, jobject 
     sprintf(info, "%s\n", avcodec_configuration());
     //LOGE("%s", info);
     return env->NewStringUTF(info);
-
 }
 };
