@@ -263,7 +263,6 @@ Java_com_example_ffmpegtest_widget_BeiPlayer_beiPlayerScreenShot(JNIEnv *env, jo
             SwsContext *img_convert_ctx = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt,
                                                          codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
                                                          SWS_BICUBIC, NULL, NULL, NULL);
-
             sws_scale(img_convert_ctx, (const uint8_t *const *) origin_frame->data,
                       origin_frame->linesize,
                       0,

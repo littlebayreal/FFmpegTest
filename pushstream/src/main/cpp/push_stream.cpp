@@ -145,8 +145,6 @@ Java_com_sziti_pushstream_MainActivity_start_1encode_1push(JNIEnv *env, jobject 
         if (ret < 0) {
             break;
         }
-        LOGI("发送H264裸流：%lf",(av_q2d(ictx->streams[videoindex]->time_base)));
-        LOGI("发送H264裸流：%lf",(av_q2d(ictx->streams[videoindex]->r_frame_rate)));
         //没有显示时间（比如未解码的 H.264 ）
         if (pkt.pts == AV_NOPTS_VALUE) {
             //AVRational time_base：时基。通过该值可以把PTS，DTS转化为真正的时间。
